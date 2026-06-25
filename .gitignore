@@ -1,0 +1,24 @@
+# Node
+node_modules/
+package-lock.json
+
+# Android build
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.apk
+*.aab
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local

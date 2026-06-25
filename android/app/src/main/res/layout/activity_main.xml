@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  林念念 Bot — Native WebView Activity Layout
+
+  The WebView is created programmatically in MainActivity.java.
+  This layout exists as a fallback container.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+</FrameLayout>

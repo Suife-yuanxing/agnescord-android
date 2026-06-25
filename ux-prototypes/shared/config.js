@@ -1,0 +1,84 @@
+/* ===== 林念念 Bot — 客户端配置 ===== */
+/* 服务器地址配置。内测期：HTTP + 公网 IP；生产换 HTTPS + 域名。
+ *
+ * 优先级：
+ *   1. localStorage['server_base'] （用户在设置页手填，开发调试用）
+ *   2. window.APP_CONFIG.server_base （托管时注入，见 server.py StaticFiles)
+ *   3. Native/Browser 自动检测
+ */
+(function() {
+  window.APP_CONFIG = window.APP_CONFIG || {};
+
+  // 用户手动覆盖（localStorage 优先）
+  var userOverride = localStorage.getItem('server_base');
+  if (userOverride) {
+    window.APP_CONFIG.server_base = userOverride.replace(/\/+$/, '');
+    return;
+  }
+
+  // 预注入的默认值（构建时替换 <服务器公网IP>）
+  if (!window.APP_CONFIG.server_base) {
+    // 直接检测原生注入的 NativeBridge（addJavascriptInterface 注入，
+    // 一定先于任何 <script> 存在），不依赖 native.js 是否已加载/执行时序。
+    // 修复：12 个页面未加载 native.js 导致 window.NativeApp 不存在 →
+    // 走 location.origin(=file://) 分支 → API 请求打到 file:///api/v1/ 全失败。
+    var _isNative = false;
+    try {
+      if (window.NativeBridge && typeof window.NativeBridge.isNative === 'function') {
+        _isNative = window.NativeBridge.isNative();
+      }
+    } catch (e) { _isNative = false; }
+    if (_isNative || (window.NativeApp && window.NativeApp.isNative)) {
+      // APK 内：默认指向公网服务器
+      window.APP_CONFIG.server_base = 'http://129.211.7.67:8766';
+      // 同步设置 data-platform="native" — 让 base.css 的 [data-platform="native"]
+      // 全屏规则生效（.phone fixed 全屏、title-bar padding 等）。
+      try {
+        if (document.documentElement) {
+          document.documentElement.setAttribute('data-platform', 'native');
+        }
+        // 防御性强制全屏：部分页面可能有 .phone { width:360px; margin:auto } 覆盖
+        setTimeout(function() {
+          var p = document.querySelector('.phone');
+          if (p) {
+            p.style.position = 'fixed';
+            p.style.top = '0';
+            p.style.left = '0';
+            p.style.right = '0';
+            p.style.bottom = '0';
+            p.style.width = 'auto';
+            p.style.height = 'auto';
+            p.style.borderRadius = '0';
+            p.style.margin = '0';
+          }
+        }, 10);
+      } catch (e2) {}
+
+      // F1：权限请求桥接（从 native.js 移到此处，确保所有页面可用）
+      // C6：NativeApp.requestPermission 在所有页面全局可用
+      window.NativeApp = window.NativeApp || {};
+      var _permissionResolve = null;
+      window._permissionCallback = function(granted) {
+        if (_permissionResolve) {
+          _permissionResolve(Boolean(granted));
+          _permissionResolve = null;
+        }
+      };
+      window.NativeApp.requestPermission = function(perm) {
+        if (!window.NativeBridge || !window.NativeBridge.requestPermission) {
+          return Promise.resolve(false);
+        }
+        return new Promise(function(resolve) {
+          _permissionResolve = resolve;
+          window.NativeBridge.requestPermission(perm);
+        });
+      };
+      window.NativeApp.checkPermission = function(perm) {
+        return window.NativeApp.requestPermission(perm);
+      };
+    } else {
+      // 浏览器调试：同源（页面从 8766 来，API 也走 8766）
+      window.APP_CONFIG.server_base = location.origin;
+    }
+  }
+})();
