@@ -154,3 +154,12 @@
 .phone[data-font-size="小"]  { --font-scale: 0.85; }
 .phone[data-font-size="中"]  { --font-scale: 1; }
 .phone[data-font-size="大"]  { --font-scale: 1.18; }
+
+/* === Font Size Zoom — 缩放 .scroll-area 内容 ===
+ * 使用 zoom 缩放主内容区域，不影响 title-bar 和 bottom-nav 的布局。
+ * 原因：直接 zoom .phone 在 Capacitor 全屏模式下会导致底部导航被裁剪。
+ * zoom 仅作用于 .scroll-area，内容区可滚动，不会丢失内容。
+ * title-bar / bottom-nav 的文字通过 var(--font-size-*) 变量缩放。
+ */
+.phone[data-font-size="小"] .scroll-area { zoom: 0.88; }
+.phone[data-font-size="大"] .scroll-area { zoom: 1.12; }

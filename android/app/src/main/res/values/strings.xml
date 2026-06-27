@@ -4,4 +4,11 @@
     <string name="title_activity_main">林念念Bot</string>
     <string name="package_name">com.deepseekqq.agnescord</string>
     <string name="custom_url_scheme">com.deepseekqq.agnescord</string>
+    <!-- P0：通知渠道 -->
+    <string name="channel_polling_name">后台服务</string>
+    <string name="channel_polling_desc">保持与念念的连接</string>
+    <string name="channel_messages_name">新消息</string>
+    <string name="channel_messages_desc">念念发来的消息和提醒</string>
+    <string name="channel_system_name">系统通知</string>
+    <string name="channel_system_desc">应用更新等系统信息</string>
 </resources>

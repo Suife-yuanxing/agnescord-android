@@ -13,6 +13,7 @@
 <style>
 /* ===== 微信通道 — 页面专属样式 ===== */
 .scroll-area { padding: 12px 0 8px; }
+/* P6：与其他页面相同的顶部间距（由 base.css 统一管理） */
 
 /* 未绑定状态卡片 — 暖灰调 */
 .status-card {
@@ -121,6 +122,32 @@
 .step-card .st-title { font-size: 11px; font-weight: 700; color: #3A2030; }
 .step-card .st-desc { font-size: 10px; color: #B090A0; margin-top: 2px; }
 
+/* 自定义确认弹窗 */
+.confirm-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center;
+  animation: dp-fade-in 0.2s ease;
+}
+@keyframes dp-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.confirm-sheet {
+  width: 280px; background: #fff; border-radius: 18px;
+  padding: 24px 20px 16px; text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  animation: dp-slide-up 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+@keyframes dp-slide-up { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.confirm-sheet .cs-title { font-size: 16px; font-weight: 800; color: #3A2030; margin-bottom: 8px; }
+.confirm-sheet .cs-desc { font-size: 13px; color: #B090A0; line-height: 1.6; margin-bottom: 20px; }
+.confirm-sheet .cs-actions { display: flex; gap: 10px; }
+.confirm-sheet .cs-btn { flex: 1; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+.confirm-sheet .cs-cancel { background: rgba(0,0,0,0.04); color: #B090A0; }
+.confirm-sheet .cs-cancel:active { transform: scale(0.97); }
+.confirm-sheet .cs-confirm { background: linear-gradient(135deg, #C4B5FD, #9B7ED8); color: #fff; box-shadow: 0 4px 12px rgba(124,92,191,0.25); }
+.confirm-sheet .cs-confirm:active { transform: scale(0.97); }
+.phone.dark-mode .confirm-sheet { background: #1A1A2E; }
+.phone.dark-mode .confirm-sheet .cs-title { color: #E0D8E8; }
+.phone.dark-mode .confirm-sheet .cs-cancel { background: rgba(255,255,255,0.06); color: #8078A0; }
+
 /* ===== Dark Mode ===== */
 .phone.dark-mode .status-card { background: linear-gradient(135deg, #5A5270 0%, #6A6278 50%, #7A7288 100%); box-shadow: 0 8px 24px rgba(90,82,112,0.25); }
 .phone.dark-mode .feature-card { background: #16213E; border-color: rgba(255,255,255,0.06); }
@@ -140,9 +167,9 @@
 <div class="phone" id="phoneFrame">
   <div class="title-bar">
     <span class="title">微信通道</span>
-    <button class="btn-icon-round" onclick="showToast('暂无更多操作')" title="更多">
+    <a class="btn-icon-round" href="通道配置.html" title="通道配置">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-    </button>
+    </a>
   </div>
 
   <div class="scroll-area">
@@ -262,50 +289,78 @@
   </div>
 </div>
 
+<script src="shared/config.js"></script>
+<script src="shared/api.js"></script>
+<script src="shared/app.js"></script>
 <script>
+// 自定义确认弹窗（替代原生 confirm）
+function showConfirm(title, desc, onConfirm) {
+  var overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay';
+  overlay.innerHTML = '<div class="confirm-sheet">' +
+    '<div class="cs-title">' + title + '</div>' +
+    '<div class="cs-desc">' + desc + '</div>' +
+    '<div class="cs-actions">' +
+      '<button class="cs-btn cs-cancel">取消</button>' +
+      '<button class="cs-btn cs-confirm">确认绑定</button>' +
+    '</div></div>';
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) { overlay.remove(); return; }
+    var btn = e.target.closest('.cs-btn');
+    if (!btn) return;
+    overlay.remove();
+    if (btn.classList.contains('cs-confirm') && onConfirm) onConfirm();
+  });
+  document.getElementById('phoneFrame').appendChild(overlay);
+}
+
 function handleBind() {
   if (!API.isLoggedIn()) { showToast('请先登录', 'error'); return; }
-  // 获取用户第一个 Bot 用于绑定
   API.listBots().then(function(r){
     var bots = r.bots || [];
     if (!bots.length) { showToast('请先创建一个 Bot', 'error'); return; }
     var botId = bots[0].id;
-    if (!confirm('确认绑定微信通道？\n\n1. 扫码验证身份\n2. 选择授权范围\n3. 确认绑定')) return;
-    var btn = document.querySelector('.bind-btn');
-    btn.textContent = '绑定中...';
-    btn.disabled = true;
-    btn.style.opacity = '0.7';
-    API.bindWechat(botId).then(function(res){
-      showToast('微信通道绑定成功！', 'success');
-      btn.textContent = '已绑定 ✓';
-      btn.style.background = 'linear-gradient(135deg, #4CAF50, #66BB6A)';
-      btn.style.boxShadow = '0 6px 18px rgba(76,175,80,0.25)';
-      var sc = document.querySelector('.status-card');
-      sc.style.background = 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 50%, #81C784 100%)';
-      sc.style.boxShadow = '0 8px 24px rgba(76,175,80,0.25)';
-      sc.querySelector('.sc-label').textContent = '已连接';
-      sc.querySelector('.sc-detail').textContent = '微信 Bot · 运行正常';
-      sc.querySelector('.sc-badge').textContent = 'v1.0.0';
-      sc.querySelector('.sc-icon svg').innerHTML = '<circle cx="12" cy="12" r="10"/><path d="M7 13l3 3 7-7"/>';
-      btn.disabled = false;
-      btn.style.opacity = '1';
-      // 刷新状态
-      if (typeof loadWxStatus === 'function') loadWxStatus();
-    }).catch(function(e){
-      showToast('绑定失败: ' + e.message, 'error');
-      btn.textContent = '立即绑定';
-      btn.disabled = false;
-      btn.style.opacity = '1';
+    showConfirm('绑定微信通道', '1. 扫码验证身份<br>2. 选择授权范围<br>3. 确认绑定', function() {
+      var btn = document.querySelector('.bind-btn');
+      btn.textContent = '绑定中...';
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+      API.bindWechat(botId).then(function(res){
+        showToast('微信通道绑定成功！', 'success');
+        btn.textContent = '已绑定 ✓';
+        btn.style.background = 'linear-gradient(135deg, #4CAF50, #66BB6A)';
+        btn.style.boxShadow = '0 6px 18px rgba(76,175,80,0.25)';
+        var sc = document.querySelector('.status-card');
+        sc.style.background = 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 50%, #81C784 100%)';
+        sc.style.boxShadow = '0 8px 24px rgba(76,175,80,0.25)';
+        sc.querySelector('.sc-label').textContent = '已连接';
+        sc.querySelector('.sc-detail').textContent = '微信 Bot · 运行正常';
+        sc.querySelector('.sc-badge').textContent = 'v1.0.0';
+        sc.querySelector('.sc-icon svg').innerHTML = '<circle cx="12" cy="12" r="10"/><path d="M7 13l3 3 7-7"/>';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        if (typeof loadWxStatus === 'function') loadWxStatus();
+      }).catch(function(e){
+        showToast('绑定失败: ' + e.message, 'error');
+        btn.textContent = '立即绑定';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        // 更新状态卡片为异常状态
+        var sc = document.querySelector('.status-card');
+        if (sc) {
+          sc.style.background = 'linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 50%, #FFB4B4 100%)';
+          var detailEl = sc.querySelector('.sc-detail');
+          if (detailEl) detailEl.textContent = '服务器异常，请稍后重试';
+          var badge = sc.querySelector('.sc-badge');
+          if (badge) badge.textContent = '异常';
+        }
+      });
     });
   }).catch(function(e){
     showToast('获取 Bot 列表失败: ' + e.message, 'error');
   });
 }
-</script>
-<script src="shared/config.js"></script>
-<script src="shared/api.js"></script>
-<script src="shared/app.js"></script>
-<script>
+
 // Load WeChat channel status
 if (API.isLoggedIn()) {
   function loadWxStatus() {
@@ -314,11 +369,65 @@ if (API.isLoggedIn()) {
       if (statusEl) {
         statusEl.textContent = wx.bound ? '已绑定' : '未绑定';
       }
+      // 更新状态卡片颜色和细节
+      var sc = document.querySelector('.status-card');
+      if (sc && wx.bound) {
+        sc.style.background = 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 50%, #81C784 100%)';
+        sc.style.boxShadow = '0 8px 24px rgba(76,175,80,0.25)';
+        var detailEl = sc.querySelector('.sc-detail');
+        if (detailEl) detailEl.textContent = '微信 Bot · 运行正常';
+        var badge = sc.querySelector('.sc-badge');
+        if (badge) badge.textContent = '在线';
+      }
       var boundEl = document.querySelector('[data-wx-bound]');
       if (boundEl) boundEl.textContent = wx.bound ? '是' : '否';
-    }).catch(function() {});
+    }).catch(function(err) {
+      var errMsg = err.message || '未知错误';
+      console.error('[WeChat] status error:', errMsg, err);
+      // 显示实际错误信息
+      var statusEl = document.querySelector('[data-wx-status]');
+      if (statusEl) statusEl.textContent = '服务异常';
+      var sc = document.querySelector('.status-card');
+      if (sc) {
+        sc.style.background = 'linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 50%, #FFB4B4 100%)';
+        var detailEl = sc.querySelector('.sc-detail');
+        if (detailEl) detailEl.textContent = errMsg;
+      }
+      var badge = sc && sc.querySelector('.sc-badge');
+      if (badge) badge.textContent = '异常';
+      // 显示后端配置引导
+      showWxBackendGuidance(errMsg);
+    });
   }
   loadWxStatus();
+}
+
+// 后端配置引导 — 当接口不可用时显示
+function showWxBackendGuidance(errMsg) {
+  var existing = document.getElementById('backendGuidance');
+  if (existing) existing.remove();
+  var serverBase = (window.APP_CONFIG && window.APP_CONFIG.server_base) || '未配置';
+  var guidance = document.createElement('div');
+  guidance.id = 'backendGuidance';
+  guidance.style.cssText = 'margin:12px 20px;padding:16px;background:rgba(255,255,255,0.85);backdrop-filter:blur(8px);border-radius:16px;border:1.5px solid rgba(255,107,107,0.2);';
+  guidance.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+    '<div style="width:28px;height:28px;border-radius:50%;background:rgba(255,107,107,0.1);display:flex;align-items:center;justify-content:center;">' +
+    '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#FF6B6B" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+    '</div>' +
+    '<div style="font-size:14px;font-weight:800;color:#3A2030;">微信通道服务不可用</div>' +
+    '</div>' +
+    '<div style="font-size:12px;color:#B090A0;line-height:1.8;">' +
+    '<div style="margin-bottom:6px;">错误详情: <span style="color:#FF6B6B;font-weight:600;">' + (errMsg || '').replace(/</g,'&lt;') + '</span></div>' +
+    '<div>请检查后端服务是否已部署微信通道模块：</div>' +
+    '<div style="margin:6px 0;padding:8px 12px;background:rgba(0,0,0,0.03);border-radius:8px;font-family:monospace;font-size:11px;line-height:1.6;">' +
+    '1. 后端服务地址: <span style="color:#C4B5FD;">' + serverBase + '</span><br>' +
+    '2. 检查端点 <span style="color:#C4B5FD;">/api/v1/channel/wechat/status</span> 是否可用<br>' +
+    '3. 确认后端微信通道插件已安装并配置正确<br>' +
+    '4. 查看后端日志排查具体错误原因' +
+    '</div>' +
+    '</div>';
+  var scrollArea = document.querySelector('.scroll-area');
+  if (scrollArea) scrollArea.appendChild(guidance);
 }
 </script>
 </body>

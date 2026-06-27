@@ -29,12 +29,26 @@ var API = (function() {
   function setTokens(access, refresh) {
     localStorage.setItem('access_token', access);
     if (refresh) localStorage.setItem('refresh_token', refresh);
+    // P0-2：同步 JWT token 到原生端（供 PollingForegroundService 读取）+ 启动轮询（幂等）
+    if (window.NativeBridge && window.NativeBridge.saveTokens) {
+      try { window.NativeBridge.saveTokens(access, refresh || ''); } catch (e) {}
+    }
+    if (window.NativeBridge && window.NativeBridge.startPollingService) {
+      try { window.NativeBridge.startPollingService(); } catch (e) {}
+    }
   }
   function clearTokens() {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('current_user');
     localStorage.removeItem('current_bot_id');
+    // P0-2：清除原生端 token + 停止轮询服务
+    if (window.NativeBridge && window.NativeBridge.stopPollingService) {
+      try { window.NativeBridge.stopPollingService(); } catch (e) {}
+    }
+    if (window.NativeBridge && window.NativeBridge.clearNativeTokens) {
+      try { window.NativeBridge.clearNativeTokens(); } catch (e) {}
+    }
   }
   function isLoggedIn() { return !!getAccessToken(); }
   function getCurrentUser() {
@@ -64,7 +78,8 @@ var API = (function() {
         if (!r.ok) { clearTokens(); return false; }
         var d = await r.json();
         if (d.access_token) {
-          localStorage.setItem('access_token', d.access_token);
+          // P0-2：refresh 后通过 setTokens 同步 native（而非直接 localStorage.setItem）
+          setTokens(d.access_token, getRefreshToken());
           return true;
         }
         clearTokens();
@@ -88,10 +103,14 @@ var API = (function() {
     var resp = await fetch(_apiBase() + path, Object.assign({}, options, { headers: headers }));
     // 401 → 尝试刷新一次重试
     if (resp.status === 401 && !options._retried) {
+      // 无 token 的请求（登录/注册）→ 直接返回 resp，让调用方解析真实错误
+      var _tk = getAccessToken();
+      if (!_tk) {
+        return resp;
+      }
       // 测试模式（mock token）→ 不刷新、不清 token，保持测试会话
       // 各页面自行 catch 并降级为空状态，便于离线/UI 测试
-      var _tk = getAccessToken();
-      if (_tk && _tk.indexOf('dev.mock.') === 0) {
+      if (_tk.indexOf('dev.mock.') === 0) {
         throw new Error('测试模式：后端不可达');
       }
       var ok = await refreshAccessToken();
@@ -388,6 +407,27 @@ var API = (function() {
     if (dateFrom) qs.push('date_from=' + dateFrom);
     if (dateTo) qs.push('date_to=' + dateTo);
     var r = await _fetch('/messages/search?' + qs.join('&'));
+    if (!r.ok) throw new Error(await _parseError(r));
+    return r.json();
+  }
+
+  // 消息操作（撤回/删除/举报）— ⚠待后端新增端点
+  async function recallMessage(messageId) {
+    var r = await _fetch('/messages/' + messageId + '/recall', { method: 'POST' });
+    if (!r.ok) throw new Error(await _parseError(r));
+    return r.json();
+  }
+
+  async function deleteMessage(messageId) {
+    var r = await _fetch('/messages/' + messageId, { method: 'DELETE' });
+    if (!r.ok && r.status !== 204) throw new Error(await _parseError(r));
+    return { ok: true };
+  }
+
+  async function reportMessage(messageId, reason) {
+    var r = await _fetch('/messages/' + messageId + '/report', {
+      method: 'POST', body: JSON.stringify({ reason: reason || '用户举报' })
+    });
     if (!r.ok) throw new Error(await _parseError(r));
     return r.json();
   }
@@ -740,6 +780,20 @@ var API = (function() {
     return r.json();
   }
 
+  // 重置 Token 统计 — ⚠待后端新增端点
+  async function resetAdminTokenStats() {
+    var r = await _fetch('/admin/tokens/reset', { method: 'POST' });
+    if (!r.ok) throw new Error(await _parseError(r));
+    return r.json();
+  }
+
+  // 恢复备份 — ⚠待后端新增端点
+  async function restoreBackup(backupId) {
+    var r = await _fetch('/admin/backups/' + backupId + '/restore', { method: 'POST' });
+    if (!r.ok) throw new Error(await _parseError(r));
+    return r.json();
+  }
+
   // ================================================================
   //  App 版本
   // ================================================================
@@ -784,6 +838,7 @@ var API = (function() {
     getBotAbilities: getBotAbilities, updateBotAbilities: updateBotAbilities,
     // messages
     listMessages: listMessages, searchMessages: searchMessages,
+    recallMessage: recallMessage, deleteMessage: deleteMessage, reportMessage: reportMessage,
     // ws
     openChatWs: openChatWs, sendMsg: sendMsg, closeChatWs: closeChatWs, wsReady: wsReady,
     newClientId: newClientId,
@@ -818,6 +873,7 @@ var API = (function() {
     getAdminTokensRanking: getAdminTokensRanking, getAdminTokens: getAdminTokens,
     getAdminLogs: getAdminLogs, getAdminBackups: getAdminBackups,
     createBackup: createBackup, getAdminMetrics: getAdminMetrics,
+    resetAdminTokenStats: resetAdminTokenStats, restoreBackup: restoreBackup,
     // app
     getAppVersion: getAppVersion,
     // token / state

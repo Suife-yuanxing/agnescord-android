@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="shared/effects.css">
 <style>
 /* ===== Page-Specific: 编辑个人资料 ===== */
+/* P6：与其他页面相同的顶部间距（由 base.css 统一管理） */
 
 /* 头像区域 */
 .avatar-section {
@@ -186,9 +187,9 @@ textarea.input-field { resize: none; height: 80px; }
       <div class="field-group">
         <label class="field-label">性别</label>
         <div class="gender-row">
-          <button class="radio-option selected" onclick="selectGender(this,'男')">男</button>
-          <button class="radio-option" onclick="selectGender(this,'女')">女</button>
-          <button class="radio-option" onclick="selectGender(this,'自定义')">自定义</button>
+          <button class="radio-option selected" data-value="male" onclick="selectGender(this,'男')">男</button>
+          <button class="radio-option" data-value="female" onclick="selectGender(this,'女')">女</button>
+          <button class="radio-option" data-value="custom" onclick="selectGender(this,'自定义')">自定义</button>
         </div>
         <div class="custom-gender-wrap" id="customGenderWrap" style="display:none;">
           <input class="input-field" id="customGender" placeholder="输入自定义性别…" maxlength="20" style="margin-top:10px;">
@@ -231,6 +232,16 @@ textarea.input-field { resize: none; height: 80px; }
 </div>
 
 <script>
+// 补全服务器URL前缀：相对路径 → 绝对路径
+function _resolveUrl(url) {
+  if (!url) return '';
+  if (url.indexOf('http') === 0 || url.indexOf('data:') === 0 || url.indexOf('blob:') === 0) return url;
+  var base = (window.APP_CONFIG && window.APP_CONFIG.server_base) || '';
+  if (base && url.charAt(0) === '/') return base + url;
+  if (base) return base + '/' + url;
+  return url;
+}
+
 var selectedGender = '男';
 var currentPersona = 'gentle'; // 当前猫娘人格：gentle/tsundere/energetic/default
 
@@ -273,10 +284,11 @@ function handleAvatarSelected(e) {
   showToast('上传中…');
   if (typeof API === 'undefined' || !API.uploadAvatar) { showToast('上传功能不可用'); return; }
   API.uploadAvatar(file).then(function(r) {
-    // 用返回的 avatar_url 替换头像显示
+    // 用返回的 avatar_url 替换头像显示（补全服务器URL前缀）
     var wrap = document.getElementById('avatarDisplay');
     if (wrap && r.avatar_url) {
-      wrap.innerHTML = '<img src="' + r.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' +
+      var fullUrl = _resolveUrl(r.avatar_url);
+      wrap.innerHTML = '<img src="' + fullUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' +
         '<div class="avatar-edit-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></div>';
     }
     showToast('头像已更新');
@@ -294,19 +306,25 @@ function saveProfile() {
   var nickEl = document.getElementById('nickname');
   var nickname = nickEl ? nickEl.value.trim() : '';
   if (!nickname) { showToast('昵称不能为空'); return; }
-  var finalGender = selectedGender;
+  // 构建 API 数据：gender 只发 male/female/custom，自定义文本走 custom_gender 字段
+  var data = { nickname: nickname };
   if (selectedGender === '自定义') {
+    data.gender = 'custom';
     var customVal = document.getElementById('customGender').value.trim();
-    finalGender = customVal || '自定义';
+    if (customVal) data.custom_gender = customVal;
+  } else {
+    var GENDER_MAP = { '男': 'male', '女': 'female' };
+    data.gender = GENDER_MAP[selectedGender] || 'male';
   }
-  // 后端只接受 male/female/custom，前端传的是中文，需映射
-  var GENDER_MAP = { '男': 'male', '女': 'female', '自定义': 'custom' };
-  var apiGender = GENDER_MAP[finalGender] || finalGender;
-  // 诊断：先显示当前状态
+  var bioEl = document.getElementById('bio');
+  if (bioEl && bioEl.value.trim()) data.bio = bioEl.value.trim();
+  var bdEl = document.getElementById('birthday');
+  if (bdEl && bdEl.value) data.birthday = bdEl.value;
+  // 诊断：显示当前状态
   var token = localStorage.getItem('access_token');
   var hasToken = !!(token && token.length > 10);
   var server = (window.APP_CONFIG && window.APP_CONFIG.server_base) || 'unknown';
-  console.log('[profile] token=' + (hasToken ? token.substring(0,20) + '...' : 'none') + ' server=' + server);
+  console.log('[profile] save data:', JSON.stringify(data), 'token=' + (hasToken ? token.substring(0,20) + '...' : 'none') + ' server=' + server);
   
   if (typeof API === 'undefined') {
     showToast('API 未加载，请重启 App');
@@ -316,14 +334,21 @@ function saveProfile() {
     showToast('未登录：token=' + (hasToken ? '有(' + token.substring(0,10) + '...)' : '无'));
     return;
   }
-  var data = { nickname: nickname, gender: apiGender };
-  var bioEl = document.getElementById('bio');
-  if (bioEl && bioEl.value.trim()) data.bio = bioEl.value.trim();
-  var bdEl = document.getElementById('birthday');
-  if (bdEl && bdEl.value) data.birthday = bdEl.value;
   
   showToast('保存中…');
-  API.updateProfile(data).then(function() {
+  API.updateProfile(data).then(function(updated) {
+    // 同步更新 localStorage 中的 current_user
+    try {
+      var u = API.getCurrentUser() || {};
+      if (updated) {
+        // 后端返回完整 user 对象时使用
+        API.setCurrentUser(Object.assign(u, updated));
+      } else {
+        // 降级：手动合并本地字段
+        Object.assign(u, data);
+        API.setCurrentUser(u);
+      }
+    } catch (e2) {}
     showToast('个人资料已保存 ✓');
     setTimeout(function(){ location.href = '我的.html'; }, 1200);
   }).catch(function(err) {
@@ -449,23 +474,58 @@ function hideDatePicker() {
 // Load user profile — C1：修回填选择器匹配实际元素 id/class
 if (API.isLoggedIn()) {
   API.getProfile().then(function(user) {
+    console.log('[profile] loaded:', JSON.stringify(user).substring(0, 300));
     var nickEl = document.getElementById('nickname');
     var bioEl = document.getElementById('bio');
     if (nickEl) nickEl.value = user.nickname || '';
     if (bioEl) bioEl.value = user.bio || '';
-    // birthday
+    // birthday — 支持多种字段名
     var bdEl = document.getElementById('birthday');
-    if (bdEl && user.birthday) bdEl.value = user.birthday;
-    // gender — 实际元素是 .radio-option（非 .radio-chip）
+    var bdText = document.getElementById('birthdayText');
+    var birthday = user.birthday || user.birth_date || '';
+    if (bdEl && birthday) bdEl.value = birthday;
+    if (bdText && birthday) bdText.textContent = birthday;
+    // avatar — 从 API 回填头像（补全服务器URL前缀）
+    if (user.avatar_url) {
+      var wrap = document.getElementById('avatarDisplay');
+      if (wrap) {
+        var fullUrl = _resolveUrl(user.avatar_url);
+        wrap.innerHTML = '<img src="' + fullUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' +
+          '<div class="avatar-edit-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></div>';
+      }
+    }
+    // gender — 用 data-value 匹配API返回的 male/female/custom
     if (user.gender) {
+      // 反向映射：英文→中文
+      var GENDER_REVERSE = { 'male': '男', 'female': '女', 'custom': '自定义' };
+      var cnGender = GENDER_REVERSE[user.gender] || user.gender;
+      selectedGender = cnGender; // 同步更新全局变量，保存时用
       var opts = document.querySelectorAll('.radio-option');
       opts.forEach(function(c) {
         var val = c.getAttribute('data-value') || c.textContent.trim();
-        if (val === user.gender) c.classList.add('selected');
-        else c.classList.remove('selected');
+        if (val === user.gender) {
+          c.classList.add('selected');
+        } else {
+          c.classList.remove('selected');
+        }
       });
+      // 如果是 custom，显示自定义输入框
+      var wrap = document.getElementById('customGenderWrap');
+      if (user.gender === 'custom') {
+        if (wrap) wrap.style.display = 'block';
+        // 如果后端返回了自定义性别文本，填充到输入框
+        var customText = user.custom_gender || user.custom_gender_text || '';
+        if (customText) {
+          var customInput = document.getElementById('customGender');
+          if (customInput) customInput.value = customText;
+        }
+      } else {
+        if (wrap) wrap.style.display = 'none';
+      }
     }
-  }).catch(function() {});
+  }).catch(function(err) {
+    console.warn('[profile] load failed:', err.message || err);
+  });
 }
 </script>
 </body>

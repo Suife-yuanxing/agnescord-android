@@ -151,6 +151,7 @@ body {
 .title-bar .name { font-size: 16px; font-weight: 700; }
 .title-bar .status { font-size: 11px; opacity: 0.8; display: flex; align-items: center; gap: 4px; }
 .title-bar .status .dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; display: inline-block; }
+.title-bar .status .dot.off { background: rgba(255,255,255,0.35); }
 .title-bar .menu {
   cursor: pointer; position: relative; z-index: 1; padding: 4px;
   display: flex; align-items: center; color: #fff; text-decoration: none;
@@ -860,7 +861,7 @@ function handleFileSelected(e, type) {
           // 替换本地预览为服务器URL，切换页面后不会消失
           if (imgRow && r.url) {
             var imgEl = imgRow.querySelector('.msg-img');
-            if (imgEl) { imgEl.src = r.url; imgEl.setAttribute('data-persist', '1'); }
+            if (imgEl) { imgEl.src = _resolveUrl(r.url); imgEl.setAttribute('data-persist', '1'); }
           }
           if (typeof showToast === 'function') showToast('图片已上传');
         }).catch(function(err) {
@@ -965,10 +966,10 @@ function sendMessage() {
   var now = new Date();
   var time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
 
-  // 用户消息（本地立即显示，ack 会确认）
+  // 用户消息（本地立即显示，ack 到达后回填 msg-id）
   var userMsg = document.createElement('div');
   userMsg.className = 'msg-row me';
-  userMsg.innerHTML = '<div class="msg-avatar user">我</div><div class="bubble me anim-in">'+escapeHtml(text)+'<div class="time">'+time+' <span style="font-size:9px;opacity:0.5;">✓</span></div></div>';
+  userMsg.innerHTML = '<div class="msg-avatar user">我</div><div class="bubble me anim-in" data-pending="1">'+escapeHtml(text)+'<div class="time">'+time+' <span style="font-size:9px;opacity:0.5;">✓</span></div></div>';
   list.appendChild(userMsg);
 
   // Bot 气泡占位（typing dots，收到首个 token 后清掉换成流式文本 + 光标）
@@ -1020,65 +1021,127 @@ var _origOnToken = null;
 </script>
 
 <script>
-// ===== 长按菜单 =====
+// ===== 长按菜单（事件委托，支持动态消息）=====
 (function(){
   var menu = null;
-  var longPressTimer;
-  var activeBubble = null;
+  var longPressTimer = null;
 
-  function bindLongPress() {
-    document.querySelectorAll('.bubble.bot, .bubble.me').forEach(function(bubble) {
-      bubble.addEventListener('touchstart', function(e) {
-        longPressTimer = setTimeout(function() {
-          showLongPressMenu(e, bubble);
-        }, 500);
-      });
-      bubble.addEventListener('touchend', function() { clearTimeout(longPressTimer); });
-      bubble.addEventListener('touchmove', function() { clearTimeout(longPressTimer); });
-      bubble.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-        showLongPressMenu(e, bubble);
-      });
-    });
+  // 事件委托：在 messageList 上监听，而非逐个 bubble 绑定
+  var list = document.getElementById('messageList');
+  if (!list) return;
+
+  function getBubble(target) {
+    return target.closest('.bubble.bot, .bubble.me');
   }
+
+  list.addEventListener('touchstart', function(e) {
+    var bubble = getBubble(e.target);
+    if (!bubble) return;
+    longPressTimer = setTimeout(function() {
+      showLongPressMenu(e, bubble);
+    }, 500);
+  });
+  list.addEventListener('touchend', function() { clearTimeout(longPressTimer); });
+  list.addEventListener('touchmove', function() { clearTimeout(longPressTimer); });
+  list.addEventListener('contextmenu', function(e) {
+    var bubble = getBubble(e.target);
+    if (!bubble) return;
+    e.preventDefault();
+    showLongPressMenu(e, bubble);
+  });
 
   function showLongPressMenu(e, bubble) {
     if (menu) menu.remove();
-    activeBubble = bubble;
     menu = document.createElement('div');
     menu.className = 'longpress-menu show';
-    menu.style.left = Math.min(e.clientX || e.touches[0].clientX, window.innerWidth - 140) + 'px';
-    menu.style.top = Math.min(e.clientY || e.touches[0].clientY, window.innerHeight - 120) + 'px';
+    var clientX = e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX) || 100;
+    var clientY = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || 100;
+    menu.style.left = Math.min(clientX, window.innerWidth - 140) + 'px';
+    menu.style.top = Math.min(clientY, window.innerHeight - 120) + 'px';
     menu.style.position = 'fixed';
 
     var isOwn = bubble.classList.contains('me');
-    var items = isOwn
-      ? ['复制', '撤回', '删除']
-      : ['复制', '举报'];
+    var items = isOwn ? ['复制', '撤回', '删除'] : ['复制', '举报'];
 
     items.forEach(function(item, i) {
       var btn = document.createElement('button');
       btn.className = 'lp-item' + (item === '删除' || item === '举报' ? ' danger' : '');
       btn.textContent = item;
       btn.style.animationDelay = (i * 0.04) + 's';
-      btn.onclick = function() {
-        if (item === '复制') { showToast('已复制到剪贴板', 'success'); }
-        if (item === '撤回') { bubble.innerHTML = '<span style="color:#C0A0B0;font-style:italic;">你撤回了一条消息</span>'; bubble.style.background = 'transparent'; showToast('消息已撤回', 'info'); }
-        if (item === '删除') { bubble.closest('.msg-row').remove(); showToast('消息已删除', 'info'); }
-        if (item === '举报') { showToast('已提交举报，我们会尽快处理', 'success'); }
-        menu.remove();
-      };
+      btn.onclick = function() { handleMenuAction(item, bubble); menu.remove(); menu = null; };
       menu.appendChild(btn);
     });
-
     document.body.appendChild(menu);
+  }
+
+  function handleMenuAction(item, bubble) {
+    var msgId = bubble.getAttribute('data-msg-id');
+
+    if (item === '复制') {
+      var text = bubble.textContent || '';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+          showToast('已复制到剪贴板', 'success');
+        }).catch(function() { showToast('已复制', 'success'); });
+      } else {
+        showToast('已复制', 'success'); // WebView 降级
+      }
+      return;
+    }
+
+    if (item === '撤回') {
+      if (!msgId) {
+        // 本地消息（WS 未返回 ack 的消息）
+        bubble.innerHTML = '<span style="color:#C0A0B0;font-style:italic;">你撤回了一条消息</span>';
+        bubble.style.background = 'transparent';
+        bubble.removeAttribute('data-msg-id');
+        bubble.setAttribute('data-recalled', '1');
+        showToast('消息已撤回', 'info');
+        return;
+      }
+      API.recallMessage(msgId).then(function() {
+        bubble.innerHTML = '<span style="color:#C0A0B0;font-style:italic;">你撤回了一条消息</span>';
+        bubble.style.background = 'transparent';
+        bubble.setAttribute('data-recalled', '1');
+        showToast('消息已撤回', 'info');
+      }).catch(function(e) {
+        showToast('撤回失败: ' + e.message, 'error');
+      });
+      return;
+    }
+
+    if (item === '删除') {
+      if (!msgId) {
+        bubble.closest('.msg-row').remove();
+        showToast('消息已删除', 'info');
+        return;
+      }
+      API.deleteMessage(msgId).then(function() {
+        bubble.closest('.msg-row').remove();
+        showToast('消息已删除', 'info');
+      }).catch(function(e) {
+        showToast('删除失败: ' + e.message, 'error');
+      });
+      return;
+    }
+
+    if (item === '举报') {
+      if (!msgId) {
+        showToast('暂无法举报此消息', 'error');
+        return;
+      }
+      API.reportMessage(msgId, '用户举报').then(function() {
+        showToast('已提交举报，我们会尽快处理', 'success');
+      }).catch(function(e) {
+        showToast('举报失败: ' + e.message, 'error');
+      });
+      return;
+    }
   }
 
   document.addEventListener('click', function(e) {
     if (menu && !menu.contains(e.target)) { menu.remove(); menu = null; }
   });
-
-  bindLongPress();
 })();
 </script>
 
@@ -1086,6 +1149,16 @@ var _origOnToken = null;
 <script src="shared/app.js"></script>
 <script src="shared/api.js"></script>
 <script>
+// 补全服务器URL前缀：相对路径 → 绝对路径
+function _resolveUrl(url) {
+  if (!url) return '';
+  if (url.indexOf('http') === 0 || url.indexOf('data:') === 0 || url.indexOf('blob:') === 0) return url;
+  var base = (window.APP_CONFIG && window.APP_CONFIG.server_base) || '';
+  if (base && url.charAt(0) === '/') return base + url;
+  if (base) return base + '/' + url;
+  return url;
+}
+
 // ===== 聊天背景全局同步 (loadChatBg + 跨页由 app.js storage 事件统一管理) =====
 loadChatBg();
 
@@ -1115,18 +1188,27 @@ loadChatBg();
     window._chat.bot = bot; // 存供消息渲染用
     var nameEl = document.querySelector('.title-bar .name');
     if (nameEl && bot.name) nameEl.textContent = bot.name;
-    // A5：人格标签
+    // A5：人格标签 + 在线状态（读 bot.is_active，不再硬编码“在线”）
     var personaLabels = { tsundere: '傲娇', gentle: '温柔', sarcastic: '毒舌', energetic: '元气', emotionless: '三无', sly: '腹黑' };
     var personaEl = document.querySelector('.title-bar .persona-tag, .title-bar .status');
-    if (personaEl && bot.personality) {
-      var label = personaLabels[bot.personality] || bot.personality;
-      personaEl.textContent = label + ' · 在线';
+    if (personaEl) {
+      var label = bot.personality ? (personaLabels[bot.personality] || bot.personality) : '';
+      // 基于 is_active 显示真实状态
+      var isBotActive = bot.is_active !== false;
+      var statusText = isBotActive ? '在线' : '已停用';
+      personaEl.innerHTML = '<span class="dot"></span> ' + (label ? label + ' · ' + statusText : statusText);
+      console.log('[Chat] bot=' + bot.name + ' avatar_url=' + JSON.stringify(bot.avatar_url) + ' is_active=' + bot.is_active);
     }
     // A6：头像 — 读 avatar_url 或按 personality 映射预设猫娘
     var PERSONA_AVATARS = { tsundere: 'agnes-tsundere.png', gentle: 'agnes-gentle.png', sarcastic: 'agnes-sarcastic.png', energetic: 'agnes-energetic.png', emotionless: 'agnes-emotionless.png', sly: 'agnes-sly.png' };
-    var avatarUrl = bot.avatar_url || ('shared/agnes-' + (PERSONA_AVATARS[bot.personality] ? bot.personality : 'cat') + '.png');
+    var avatarUrl = bot.avatar_url ? _resolveUrl(bot.avatar_url) : ('shared/agnes-' + (PERSONA_AVATARS[bot.personality] ? bot.personality : 'cat') + '.png');
+    var fallbackAvatar = 'shared/agnes-' + (PERSONA_AVATARS[bot.personality] ? bot.personality : 'cat') + '.png';
+    console.log('[Chat] avatar resolved=' + avatarUrl + ' fallback=' + fallbackAvatar);
     var avImgs = document.querySelectorAll('.title-bar .avatar-wrap img, .msg-avatar img');
-    avImgs.forEach(function(img) { img.src = avatarUrl; });
+    avImgs.forEach(function(img) {
+      img.src = avatarUrl;
+      img.onerror = function() { this.onerror = null; this.src = fallbackAvatar; };
+    });
   }).catch(function() {});
 
   // 拉历史消息渲染
@@ -1157,11 +1239,35 @@ function appendHistoryMessage(list, m) {
   var t = new Date((m.time || 0) * 1000);
   var hh = t.getHours().toString().padStart(2,'0');
   var mm = t.getMinutes().toString().padStart(2,'0');
+  // Bot 头像：使用实际 bot avatar_url，而非硬编码默认图
+  var botAvatarSrc = 'shared/agnes-cat.png';
+  if (window._chat && window._chat.bot && window._chat.bot.avatar_url) {
+    botAvatarSrc = _resolveUrl(window._chat.bot.avatar_url);
+  }
   var avatar = isUser
     ? '<div class="msg-avatar user">我</div>'
-    : '<div class="msg-avatar bot"><div class="img-cat avatar img-sm"><img src="shared/agnes-cat.png" alt="猫娘"></div></div>';
+    : '<div class="msg-avatar bot"><div class="img-cat avatar img-sm"><img src="' + botAvatarSrc + '" alt="Bot" onerror="this.onerror=null;this.src=\'shared/agnes-cat.png\'"></div></div>';
   var bubbleClass = isUser ? 'bubble me' : 'bubble bot';
-  row.innerHTML = avatar + '<div class="' + bubbleClass + '">' + escapeHtml(m.content || '') + '<div class="time">' + hh + ':' + mm + '</div></div>';
+  // 撤回消息渲染
+  if (m.recalled) {
+    row.innerHTML = avatar + '<div class="' + bubbleClass + '" data-recalled="1">' +
+      '<span style="color:#C0A0B0;font-style:italic;">你撤回了一条消息</span></div>';
+  } else {
+    // 图片消息：检查 content 是否是图片 URL
+    var content = m.content || '';
+    var isImage = m.type === 'image' || /\.(jpg|jpeg|png|gif|webp|bmp)(\?.*)?$/i.test(content);
+    if (isImage && content) {
+      var imgUrl = _resolveUrl(content);
+      row.innerHTML = avatar + '<div class="' + bubbleClass + '" style="padding:5px;background:transparent;box-shadow:none;">' +
+        '<img class="msg-img" src="' + imgUrl + '" alt="图片" onclick="previewImage(this.src)" loading="lazy" style="max-width:200px;max-height:200px;border-radius:12px;cursor:pointer;">' +
+        '<div class="time" style="margin-top:4px;">' + hh + ':' + mm + '</div></div>';
+    } else {
+      row.innerHTML = avatar + '<div class="' + bubbleClass + '">' + escapeHtml(content) + '<div class="time">' + hh + ':' + mm + '</div></div>';
+    }
+  }
+  // 记录 message_id
+  var bubbleEl = row.querySelector('.bubble');
+  if (bubbleEl && m.id) bubbleEl.setAttribute('data-msg-id', m.id);
   list.appendChild(row);
 }
 
@@ -1179,15 +1285,17 @@ function handleBotAvatarSelected(e) {
   var file = e.target.files && e.target.files[0];
   if (!file) return;
   if (file.size > 2 * 1024 * 1024) { if (typeof showToast === 'function') showToast('头像最大 2MB'); return; }
-  if (typeof API === 'undefined' || !API.uploadAvatar) { if (typeof showToast === 'function') showToast('上传功能不可用'); return; }
+  if (typeof API === 'undefined' || !API.uploadBotAvatar) { if (typeof showToast === 'function') showToast('上传功能不可用'); return; }
+  var botId = window._chat ? window._chat.botId : null;
+  if (!botId) { if (typeof showToast === 'function') showToast('未指定 Bot'); return; }
   if (typeof showToast === 'function') showToast('上传中…');
-  API.uploadAvatar(file).then(function(r) {
+  API.uploadBotAvatar(botId, file).then(function(r) {
     if (r && r.avatar_url) {
-      var avImgs = document.querySelectorAll('.title-bar .avatar-wrap img, .msg-avatar img');
-      avImgs.forEach(function(img) { img.src = r.avatar_url; });
-      if (window._chat && window._chat.botId) {
-        API.updateBot(window._chat.botId, { avatar_url: r.avatar_url }).catch(function(){});
-      }
+      var fullUrl = _resolveUrl(r.avatar_url);
+      var avImgs = document.querySelectorAll('.title-bar .avatar-wrap img, .msg-avatar.bot img');
+      avImgs.forEach(function(img) { img.src = fullUrl; });
+      // 更新内存中的 bot 对象
+      if (window._chat && window._chat.bot) window._chat.bot.avatar_url = r.avatar_url;
       if (typeof showToast === 'function') showToast('头像已更新');
     }
   }).catch(function(err) {
@@ -1198,7 +1306,19 @@ function handleBotAvatarSelected(e) {
 
 function connectWs() {
   API.openChatWs({
-    onAck: function(f) { if (f.duplicate && typeof showToast === 'function') showToast('消息已发送过（去重）'); },
+    onAck: function(f) {
+      if (f.duplicate && typeof showToast === 'function') showToast('消息已发送过（去重）');
+      // S2修复：ack 帧回填 message_id 到用户气泡
+      // 兼容后端字段名：message_id / server_id / msg_id
+      var ackId = f.message_id || f.server_id || f.msg_id;
+      if (ackId) {
+        var pendingBubble = document.querySelector('.bubble.me[data-pending="1"]');
+        if (pendingBubble) {
+          pendingBubble.setAttribute('data-msg-id', ackId);
+          pendingBubble.removeAttribute('data-pending');
+        }
+      }
+    },
     onTyping: function() { /* typing dots 由 sendMessage 本地先建 */ },
     onToken: function(text) {
       var bubble = window._chat.pendingBotBubble;
@@ -1226,6 +1346,13 @@ function connectWs() {
         bubble.querySelector('.bubble.bot').insertAdjacentHTML('beforeend',
           '<div class="time">' + hh + ':' + mm + '</div>');
         bubble.classList.add('anim-in');
+        // S2修复：done 帧回填 message_id 到 bot 气泡
+        // 后端设计文档字段名为 server_id，兼容 message_id
+        var doneId = f.server_id || f.message_id;
+        if (doneId) {
+          var botBubble = bubble.querySelector('.bubble.bot');
+          if (botBubble) botBubble.setAttribute('data-msg-id', doneId);
+        }
         window._chat.pendingBotBubble = null;
         var list = document.getElementById('messageList');
         list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' });

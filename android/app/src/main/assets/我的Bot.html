@@ -96,11 +96,20 @@
 // ===== 我的Bot — API 数据加载 =====
 (function() {
   'use strict';
-  // 未登录时显示空态（不强制跳转）
 
   var AVATAR_COLORS = ['av-pink', 'av-purple', 'av-orange'];
   var PERSONA_LABELS = { tsundere: '傲娇', gentle: '温柔', sarcastic: '毒舌', energetic: '元气', emotionless: '三无', sly: '腹黑' };
   var PERSONA_AVATARS = { tsundere: 'agnes-tsundere.png', gentle: 'agnes-gentle.png', sarcastic: 'agnes-sarcastic.png', energetic: 'agnes-energetic.png', emotionless: 'agnes-emotionless.png', sly: 'agnes-sly.png' };
+
+  // Bot 状态逻辑：基于后端 is_active 字段真实反映状态
+  // is_active=false 表示 Bot 已被管理员/用户停用，内置聊天不可用
+  // is_active=true 表示 Bot 正常运行中
+  function computeBotStatus(bot) {
+    if (bot.is_active === false) {
+      return { online: false, reason: '已停用' };
+    }
+    return { online: true, reason: '' };
+  }
 
   function renderBots(bots) {
     var container = document.getElementById('botList');
@@ -114,14 +123,19 @@
     container.innerHTML = bots.map(function(b, i) {
       var colorCls = AVATAR_COLORS[i % 3];
       var personaLabel = PERSONA_LABELS[b.personality] || b.personality || '';
-      var avatarFile = PERSONA_AVATARS[b.personality] || 'shared/agnes-cat.png';
-      var isActive = b.is_active !== false;
+      var avatarFile = PERSONA_AVATARS[b.personality] || 'agnes-cat.png';
+      var status = computeBotStatus(b);
+      var isActive = status.online;
+      var statusReason = status.reason;
+      var fallbackAvatar = 'shared/' + avatarFile;
       var avatarHtml = b.avatar_url
-        ? '<img src="' + b.avatar_url + '" alt="Bot" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">'
-        : '<div class="img-cat avatar img-md"><img src="shared/' + avatarFile + '" alt="猫娘"></div>';
+        ? '<img src="' + _resolveUrl(b.avatar_url) + '" alt="Bot" style="width:52px;height:52px;border-radius:50%;object-fit:cover;" onerror="this.onerror=null;this.src=\'' + fallbackAvatar + '\'">'
+        : '<div class="img-cat avatar img-md"><img src="' + fallbackAvatar + '" alt="猫娘"></div>';
+      console.log('[BotList] bot=' + b.name + ' avatar_url=' + JSON.stringify(b.avatar_url) + ' resolved=' + (b.avatar_url ? _resolveUrl(b.avatar_url) : 'N/A') + ' is_active=' + b.is_active);
+
+      var statusText = isActive ? '运行中' : '已停用';
 
       return '<div class="bot-card-wrap" style="position:relative;overflow:hidden;margin-bottom:10px;">' +
-        // D1：左滑操作层
         '<div class="swipe-actions" style="position:absolute;right:0;top:0;bottom:0;display:none;align-items:center;gap:4px;padding-right:12px;background:linear-gradient(90deg,transparent,#FFF0F3);z-index:0;">' +
           '<button onclick="event.stopPropagation();location.href=\'Bot设置.html?bot_id=' + b.id + '\'" style="width:36px;height:36px;border-radius:50%;border:none;background:#C4B5FD;color:#fff;font-size:14px;cursor:pointer;">⚙</button>' +
           '<button onclick="event.stopPropagation();confirmDelete(' + b.id + ',\'' + _esc(b.name) + '\')" style="width:36px;height:36px;border-radius:50%;border:none;background:#FF6B7A;color:#fff;font-size:14px;cursor:pointer;">✕</button>' +
@@ -129,17 +143,27 @@
         '<div class="bot-card' + (isActive ? '' : ' offline') + '" onclick="goChat(' + b.id + ')" data-bot-id="' + b.id + '" style="position:relative;z-index:1;background:rgba(255,255,255,0.8);transition:transform 0.25s ease;">' +
           '<div class="bot-avatar ' + colorCls + '">' + avatarHtml + '</div>' +
           '<div class="bot-info">' +
-            '<div class="bot-name">' + _esc(b.name) + (isActive ? '' : '（已停用）') + '</div>' +
+            '<div class="bot-name">' + _esc(b.name) + '</div>' +
             '<div class="bot-persona">' + _esc(personaLabel) + '</div>' +
             '<div class="bot-meta"><span>今日 ' + (b.today_count || 0) + ' 条</span><span>Lv.' + (b.level || 0) + '</span></div>' +
           '</div>' +
-          '<div class="bot-status"><span class="status-dot ' + (isActive ? 'online' : 'offline') + '"></span>' + (isActive ? '在线' : '离线') + '</div>' +
+          '<div class="bot-status"><span class="status-dot ' + (isActive ? 'online' : 'offline') + '"></span>' + statusText + '</div>' +
         '</div>' +
       '</div>';
     }).join('');
   }
 
   function _esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
+  // 补全服务器URL前缀
+  function _resolveUrl(url) {
+    if (!url) return '';
+    if (url.indexOf('http') === 0 || url.indexOf('data:') === 0) return url;
+    var base = (window.APP_CONFIG && window.APP_CONFIG.server_base) || '';
+    if (base && url.charAt(0) === '/') return base + url;
+    if (base) return base + '/' + url;
+    return url;
+  }
 
   // D1：左滑手势 — 渲染后绑定（先重置所有滑动状态避免事件累积）
   function bindSwipe() {
@@ -180,12 +204,14 @@
     });
   }
 
-  // 加载
+  // 加载 Bot 列表
   API.listBots().then(function(d) {
     renderBots(d.bots);
     bindSwipe();
   }).catch(function(err) {
-    document.getElementById('botList').innerHTML = '<div class="loading-state">加载失败：' + (err.message || '网络错误') + '</div>';
+    var msg = err.message || '网络错误';
+    console.error('[BotList] load error:', msg, err);
+    document.getElementById('botList').innerHTML = '<div class="empty-state"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C0A0B0" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="title">加载失败</div><div class="desc">' + _esc(msg) + '<br>请检查网络连接或后端服务状态</div><button onclick="location.reload()" style="border:none;border-radius:14px;padding:10px 24px;background:#F472B6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">重试</button></div>';
   });
 
   // 聊天

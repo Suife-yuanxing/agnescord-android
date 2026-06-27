@@ -13,6 +13,7 @@
 <style>
 /* ===== QQ 通道 — 页面专属样式 ===== */
 .scroll-area { padding: 12px 0 8px; }
+/* P6：与其他页面相同的顶部间距（由 base.css 统一管理） */
 
 /* 连接状态卡片 */
 .status-card {
@@ -105,9 +106,9 @@
 <div class="phone" id="phoneFrame">
   <div class="title-bar">
     <span class="title">QQ 通道</span>
-    <button class="btn-icon-round" onclick="showToast('通道配置已保存')" title="更多">
+    <a class="btn-icon-round" href="通道配置.html" title="通道配置">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-    </button>
+    </a>
   </div>
 
   <div class="scroll-area">
@@ -117,10 +118,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
       </div>
       <div class="sc-info">
-        <div class="sc-label" data-qq-status>已连接</div>
-        <div class="sc-detail">QQ Bot · 运行正常</div>
+        <div class="sc-label" data-qq-status>加载中…</div>
+        <div class="sc-detail">QQ Bot · 获取状态中</div>
       </div>
-      <div class="sc-badge">v1.2.0</div>
+      <div class="sc-badge">--</div>
     </div>
 
     <!-- 连接信息 -->
@@ -128,7 +129,7 @@
     <div class="info-card">
       <div class="info-row">
         <span class="ir-label">QQ 号</span>
-        <span class="ir-value" data-qq-number>3073****21</span>
+        <span class="ir-value" data-qq-number>--</span>
       </div>
       <div class="info-row">
         <span class="ir-label">Bot 类型</span>
@@ -136,11 +137,11 @@
       </div>
       <div class="info-row">
         <span class="ir-label">连接时间</span>
-        <span class="ir-value">2026-06-20 14:32</span>
+        <span class="ir-value" data-qq-connect-time>--</span>
       </div>
       <div class="info-row">
         <span class="ir-label">心跳状态</span>
-        <span class="ir-value"><span class="dot green"></span> 正常</span>
+        <span class="ir-value" data-qq-heartbeat>--</span>
       </div>
       <div class="info-row">
         <span class="ir-label">协议</span>
@@ -152,15 +153,15 @@
     <div class="group-title" style="margin:14px 20px 6px;">今日统计</div>
     <div class="stat-mini-row">
       <div class="stat-mini">
-        <div class="sm-value sm-green" id="msgCount" data-msg-count>156</div>
+        <div class="sm-value sm-green" id="msgCount" data-msg-count>--</div>
         <div class="sm-label">收发消息</div>
       </div>
       <div class="stat-mini">
-        <div class="sm-value sm-pink" id="groupCount" data-group-count>12</div>
+        <div class="sm-value sm-pink" id="groupCount" data-group-count>--</div>
         <div class="sm-label">活跃群聊</div>
       </div>
       <div class="stat-mini">
-        <div class="sm-value" style="color:#C4B5FD;">99.7%</div>
+        <div class="sm-value" style="color:#C4B5FD;" id="successRate" data-success-rate>--</div>
         <div class="sm-label">成功率</div>
       </div>
     </div>
@@ -176,7 +177,7 @@
           <span class="item-label">自动回复</span>
         </div>
         <label class="toggle-switch" onclick="event.stopPropagation()">
-          <input type="checkbox" checked onchange="showToast(this.checked?'自动回复已开启':'自动回复已关闭')">
+          <input type="checkbox" checked id="qqAutoReply" onchange="syncQQSetting('auto_reply', this, '自动回复')">
           <span class="toggle-slider"></span>
         </label>
       </div>
@@ -188,7 +189,7 @@
           <span class="item-label">群聊响应</span>
         </div>
         <label class="toggle-switch" onclick="event.stopPropagation()">
-          <input type="checkbox" onchange="showToast(this.checked?'群聊响应已开启':'群聊响应已关闭')">
+          <input type="checkbox" id="qqGroupResponse" onchange="syncQQSetting('group_response', this, '群聊响应')">
           <span class="toggle-slider"></span>
         </label>
       </div>
@@ -200,7 +201,7 @@
           <span class="item-label">消息通知</span>
         </div>
         <label class="toggle-switch" onclick="event.stopPropagation()">
-          <input type="checkbox" checked onchange="showToast(this.checked?'消息通知已开启':'消息通知已关闭')">
+          <input type="checkbox" checked id="qqMsgNotify" onchange="syncQQSetting('message_notify', this, '消息通知')">
           <span class="toggle-slider"></span>
         </label>
       </div>
@@ -220,59 +221,14 @@
     <!-- 消息日志预览 -->
     <div class="group-title" style="margin:14px 20px 6px;">最近消息</div>
     <div class="info-card" style="padding:0; overflow:hidden;" data-recent-msgs>
-      <div class="setting-item" style="margin:0; border-radius:0; background:transparent;">
-        <div style="display:flex; align-items:center; gap:10px; width:100%;">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#F472B6,#FFB0C0);display:flex;align-items:center;justify-content:center;">
-            <div class="img-cat avatar img-sm"><img src="shared/agnes-cat.png" alt="猫娘"></div>
-          </div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:700;color:#3A2030;">小咪</div>
-            <div style="font-size:12px;color:#B090A0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">知道啦，主人~ 马上就去办 ✨</div>
-          </div>
-          <span style="font-size:10px;color:#C0A0B0;">14:32</span>
-        </div>
-      </div>
-      <div class="setting-item" style="margin:0; border-radius:0; background:transparent; border-top:1px solid rgba(0,0,0,0.04);">
-        <div style="display:flex;align-items:center;gap:10px;width:100%;">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#C4B5FD,#9B7ED8);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800;">群</div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:700;color:#3A2030;">猫娘粉丝群</div>
-            <div style="font-size:12px;color:#B090A0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">小明：@小咪 今天心情怎么样？</div>
-          </div>
-          <span style="font-size:10px;color:#C0A0B0;">14:28</span>
-        </div>
-      </div>
-      <div class="setting-item" style="margin:0; border-radius:0; background:transparent; border-top:1px solid rgba(0,0,0,0.04);">
-        <div style="display:flex;align-items:center;gap:10px;width:100%;">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#FFB347,#FFC773);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800;">群</div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:700;color:#3A2030;">二次元の部屋</div>
-            <div style="font-size:12px;color:#B090A0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">小红：今天的番看了吗！</div>
-          </div>
-          <span style="font-size:10px;color:#C0A0B0;">13:55</span>
-        </div>
+      <div class="setting-item" style="margin:0;border-radius:0;background:transparent;text-align:center;padding:20px;">
+        <div style="font-size:13px;color:#B090A0;">加载中…</div>
       </div>
     </div>
 
     <!-- 危险操作 -->
     <div class="danger-zone">
-      <button class="danger-btn" id="disconnectBtn" onclick="(function(){
-        if(!confirm('确定断开 QQ 通道连接吗？Bot 将停止响应 QQ 消息。')) return;
-        var btn = document.getElementById('disconnectBtn');
-        btn.disabled = true; btn.textContent = '断开中...';
-        API.disconnectQQ().then(function(r){
-          showToast('QQ 通道已断开', 'error');
-          var sc = document.querySelector('.status-card');
-          sc.style.background = 'linear-gradient(135deg, #B0A8C0 0%, #C8C0D8 50%, #D8D0E8 100%)';
-          sc.querySelector('.sc-label').textContent = '已断开';
-          sc.querySelector('.sc-detail').textContent = 'QQ 通道未连接';
-          sc.querySelector('.sc-badge').textContent = '离线';
-          btn.textContent = '已断开';
-        }).catch(function(e){
-          showToast('断开失败: ' + e.message, 'error');
-          btn.disabled = false; btn.textContent = '断开连接';
-        });
-      })()">
+      <button class="danger-btn" id="disconnectBtn" onclick="handleDisconnect()">
         断开连接
       </button>
     </div>
@@ -301,26 +257,79 @@
 </div>
 
 <script>
-// Counter animation
-(function() {
-  var counters = [
-    { el: document.getElementById('msgCount'), target: 156 },
-    { el: document.getElementById('groupCount'), target: 12 }
-  ];
-  counters.forEach(function(c) {
-    if (!c.el) return;
-    var duration = 600, start = performance.now();
-    function update(now) {
-      var p = Math.min((now - start) / duration, 1);
-      var eased = 1 - Math.pow(1 - p, 3);
-      c.el.textContent = Math.round(c.target * eased);
-      if (p < 1) requestAnimationFrame(update);
-      else c.el.textContent = c.target;
-    }
-    c.el.textContent = '0';
-    requestAnimationFrame(update);
+// 自定义确认弹窗（替代原生 confirm）
+function showConfirmDialog(title, desc, onConfirm, confirmText) {
+  var overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = '<div style="width:280px;background:#fff;border-radius:18px;padding:24px 20px 16px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.15);">' +
+    '<div style="font-size:16px;font-weight:800;color:#3A2030;margin-bottom:8px;">' + title + '</div>' +
+    '<div style="font-size:13px;color:#B090A0;line-height:1.6;margin-bottom:20px;">' + desc + '</div>' +
+    '<div style="display:flex;gap:10px;">' +
+      '<button class="cd-cancel" style="flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:rgba(0,0,0,0.04);color:#B090A0;">取消</button>' +
+      '<button class="cd-confirm" style="flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#F472B6,#FF8095);color:#fff;">' + (confirmText || '确认') + '</button>' +
+    '</div></div>';
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) { overlay.remove(); return; }
+    if (e.target.classList.contains('cd-cancel')) { overlay.remove(); return; }
+    if (e.target.classList.contains('cd-confirm')) { overlay.remove(); if (onConfirm) onConfirm(); }
   });
-})();
+  document.getElementById('phoneFrame').appendChild(overlay);
+}
+
+function handleDisconnect() {
+  showConfirmDialog('断开 QQ 通道', 'Bot 将停止响应 QQ 消息，确定断开吗？', function() {
+    var btn = document.getElementById('disconnectBtn');
+    btn.disabled = true; btn.textContent = '断开中...';
+    API.disconnectQQ().then(function(r){
+      showToast('QQ 通道已断开', 'error');
+      var sc = document.querySelector('.status-card');
+      sc.style.background = 'linear-gradient(135deg, #B0A8C0 0%, #C8C0D8 50%, #D8D0E8 100%)';
+      sc.querySelector('.sc-label').textContent = '已断开';
+      sc.querySelector('.sc-detail').textContent = 'QQ 通道未连接';
+      sc.querySelector('.sc-badge').textContent = '离线';
+      btn.textContent = '已断开';
+    }).catch(function(e){
+      showToast('断开失败: ' + e.message, 'error');
+      btn.disabled = false; btn.textContent = '断开连接';
+    });
+  }, '断开连接');
+}
+
+// 后端配置引导 — 当接口不可用时显示
+function showBackendGuidance(channel, errMsg) {
+  var existing = document.getElementById('backendGuidance');
+  if (existing) existing.remove();
+  var serverBase = (window.APP_CONFIG && window.APP_CONFIG.server_base) || '未配置';
+  var guidance = document.createElement('div');
+  guidance.id = 'backendGuidance';
+  guidance.style.cssText = 'margin:12px 20px;padding:16px;background:rgba(255,255,255,0.85);backdrop-filter:blur(8px);border-radius:16px;border:1.5px solid rgba(255,107,107,0.2);';
+  guidance.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+    '<div style="width:28px;height:28px;border-radius:50%;background:rgba(255,107,107,0.1);display:flex;align-items:center;justify-content:center;">' +
+    '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#FF6B6B" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+    '</div>' +
+    '<div style="font-size:14px;font-weight:800;color:#3A2030;">' + channel + ' 通道服务不可用</div>' +
+    '</div>' +
+    '<div style="font-size:12px;color:#B090A0;line-height:1.8;">' +
+    '<div style="margin-bottom:6px;">错误详情: <span style="color:#FF6B6B;font-weight:600;">' + (errMsg || '').replace(/</g,'&lt;') + '</span></div>' +
+    '<div>请检查后端服务是否已部署 ' + channel + ' 通道模块：</div>' +
+    '<div style="margin:6px 0;padding:8px 12px;background:rgba(0,0,0,0.03);border-radius:8px;font-family:monospace;font-size:11px;line-height:1.6;">' +
+    '1. 后端服务地址: <span style="color:#C4B5FD;">' + serverBase + '</span><br>' +
+    '2. 检查端点 <span style="color:#C4B5FD;">/api/v1/channel/' + channel.toLowerCase() + '/status</span> 是否可用<br>' +
+    '3. 确认后端 ' + channel + ' 通道插件已安装并配置正确<br>' +
+    '4. 查看后端日志排查具体错误原因' +
+    '</div>' +
+    '</div>';
+  var scrollArea = document.querySelector('.scroll-area');
+  if (scrollArea) {
+    var dangerZone = scrollArea.querySelector('.danger-zone');
+    if (dangerZone) {
+      scrollArea.insertBefore(guidance, dangerZone);
+    } else {
+      scrollArea.appendChild(guidance);
+    }
+  }
+}
 </script>
 <script src="shared/config.js"></script>
 <script src="shared/api.js"></script>
@@ -330,24 +339,71 @@
 if (API.isLoggedIn()) {
   function loadQQStatus() {
     API.getQQStatus().then(function(qq) {
-      // Update connection status
-      var statusEl = document.querySelector('.conn-status') || document.querySelector('[data-qq-status]');
+      var statusEl = document.querySelector('[data-qq-status]');
       if (statusEl) {
         statusEl.textContent = qq.connected ? '已连接' : '未连接';
-        statusEl.className = (statusEl.className || '').replace(/\bon\b|\boff\b/g, '') + (qq.connected ? ' on' : ' off');
       }
-      var qqNumEl = document.querySelector('[data-qq-number]') || document.querySelector('.qq-number');
+      // 更新状态卡片颜色和详情
+      var sc = document.querySelector('.status-card');
+      if (sc) {
+        if (qq.connected) {
+          sc.style.background = 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 50%, #81C784 100%)';
+          var detailEl = sc.querySelector('.sc-detail');
+          if (detailEl) detailEl.textContent = 'QQ Bot · 运行正常';
+        } else {
+          sc.style.background = 'linear-gradient(135deg, #B0A8C0 0%, #C8C0D8 50%, #D8D0E8 100%)';
+          var detailEl = sc.querySelector('.sc-detail');
+          if (detailEl) detailEl.textContent = 'QQ 通道未连接';
+        }
+      }
+      var badge = sc && sc.querySelector('.sc-badge');
+      if (badge) badge.textContent = qq.connected ? '在线' : '离线';
+      var qqNumEl = document.querySelector('[data-qq-number]');
       if (qqNumEl && qq.qq_number) qqNumEl.textContent = qq.qq_number;
-    }).catch(function() {});
+      // 连接时间
+      var ctEl = document.querySelector('[data-qq-connect-time]');
+      if (ctEl && qq.connected_at) {
+        ctEl.textContent = new Date(qq.connected_at * 1000).toLocaleString('zh-CN', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+      }
+      // 心跳状态
+      var hbEl = document.querySelector('[data-qq-heartbeat]');
+      if (hbEl) {
+        hbEl.innerHTML = qq.connected ? '<span class="dot green"></span>正常' : '--';
+      }
+    }).catch(function(err) {
+      var errMsg = err.message || '未知错误';
+      console.error('[QQ] status error:', errMsg, err);
+      // 显示实际错误信息
+      var statusEl = document.querySelector('[data-qq-status]');
+      if (statusEl) statusEl.textContent = '服务异常';
+      var sc = document.querySelector('.status-card');
+      if (sc) {
+        sc.style.background = 'linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 50%, #FFB4B4 100%)';
+        var detailEl = sc.querySelector('.sc-detail');
+        if (detailEl) detailEl.textContent = errMsg;
+      }
+      var badge = sc && sc.querySelector('.sc-badge');
+      if (badge) badge.textContent = '异常';
+      // 显示后端配置引导
+      showBackendGuidance('QQ', errMsg);
+    });
     API.getQQStats().then(function(s) {
       var msgEl = document.querySelector('[data-msg-count]');
       if (msgEl) msgEl.textContent = s.message_count || 0;
       var grpEl = document.querySelector('[data-group-count]');
       if (grpEl) grpEl.textContent = s.active_groups || 0;
-    }).catch(function() {});
+      var rateEl = document.querySelector('[data-success-rate]');
+      if (rateEl) rateEl.textContent = (s.success_rate != null ? (s.success_rate * 100).toFixed(0) + '%' : '--');
+    }).catch(function() {
+      // 统计失败不影响主流程
+    });
     API.getQQRecentMessages(3).then(function(d) {
       var container = document.querySelector('[data-recent-msgs]');
-      if (!container || !d.messages || !d.messages.length) return;
+      if (!container) return;
+      if (!d.messages || !d.messages.length) {
+        container.innerHTML = '<div class="setting-item" style="margin:0;border-radius:0;background:transparent;text-align:center;padding:20px;"><div style="font-size:13px;color:#B090A0;">暂无消息</div></div>';
+        return;
+      }
       container.innerHTML = d.messages.map(function(m) {
         var src = m.source || m.sender || '';
         var txt = m.content || m.text || '';
@@ -365,6 +421,49 @@ if (API.isLoggedIn()) {
   loadQQStatus();
   setInterval(loadQQStatus, 30000); // auto refresh every 30s
 }
+
+// 首次加载 QQ 设置（不放入 30s 轮询，避免覆盖用户操作）
+function loadQQSettings() {
+  if (!API.isLoggedIn()) return;
+  API.getQQSettings().then(function(s) {
+    if (s.auto_reply !== undefined) {
+      var el = document.getElementById('qqAutoReply');
+      if (el) el.checked = s.auto_reply;
+    }
+    if (s.group_response !== undefined) {
+      var el = document.getElementById('qqGroupResponse');
+      if (el) el.checked = s.group_response;
+    }
+    if (s.message_notify !== undefined) {
+      var el = document.getElementById('qqMsgNotify');
+      if (el) el.checked = s.message_notify;
+    }
+  }).catch(function(err) {
+    console.warn('[QQ] settings load failed:', err.message || err);
+    showToast('通道设置加载失败，显示的是本地缓存', 'error');
+  });
+}
+
+var _qqSettingSyncing = false; // 防止 getQQSettings 覆盖正在操作的开关
+
+function syncQQSetting(key, input, label) {
+  var value = input.checked;
+  showToast(label + (value ? '已开启' : '已关闭'));
+  if (typeof API === 'undefined' || !API.updateQQSettings) return;
+  _qqSettingSyncing = true;
+  var data = {};
+  data[key] = value;
+  API.updateQQSettings(data).then(function() {
+    _qqSettingSyncing = false;
+  }).catch(function(e) {
+    // 乐观更新回滚
+    input.checked = !value;
+    _qqSettingSyncing = false;
+    showToast(label + '同步失败，已回滚: ' + e.message, 'error');
+  });
+}
+
+loadQQSettings(); // 仅调用一次，不放入 setInterval
 </script>
 </body>
 </html>

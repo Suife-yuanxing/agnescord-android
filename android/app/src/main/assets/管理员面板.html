@@ -12,6 +12,7 @@
 <style>
 /* ===== 开发者面板 — 页面专属样式 ===== */
 body { background-attachment: fixed; overflow-x: hidden; }
+/* P6：与其他页面相同的顶部间距（由 base.css 统一管理） */
 
 .scroll-area { padding: 0 0 8px; }
 
@@ -282,9 +283,9 @@ body { background-attachment: fixed; overflow-x: hidden; }
           </div>
           <span class="hc-label">CPU 利用率</span>
         </div>
-        <div class="hc-value" data-metric="cpu">23<span style="font-size:14px;font-weight:600;color:var(--text-secondary);">%</span></div>
-        <div class="hc-bar-wrap"><div class="hc-bar-fill cpu" style="width:23%;"></div></div>
-        <div class="hc-sub">4 核 · 负载 0.8</div>
+        <div class="hc-value" data-metric="cpu">--<span style="font-size:14px;font-weight:600;color:var(--text-secondary);">%</span></div>
+        <div class="hc-bar-wrap"><div class="hc-bar-fill cpu" style="width:0%;"></div></div>
+        <div class="hc-sub">加载中…</div>
       </div>
       <div class="health-card">
         <div class="hc-head">
@@ -293,9 +294,9 @@ body { background-attachment: fixed; overflow-x: hidden; }
           </div>
           <span class="hc-label">内存使用</span>
         </div>
-        <div class="hc-value" data-metric="mem">1.8<span style="font-size:14px;font-weight:600;color:var(--text-secondary);">/4.0 GB</span></div>
-        <div class="hc-bar-wrap"><div class="hc-bar-fill ram" style="width:45%;"></div></div>
-        <div class="hc-sub">可用 2.2 GB · 缓存 0.6 GB</div>
+        <div class="hc-value" data-metric="mem">--<span style="font-size:14px;font-weight:600;color:var(--text-secondary);">/-- GB</span></div>
+        <div class="hc-bar-wrap"><div class="hc-bar-fill ram" style="width:0%;"></div></div>
+        <div class="hc-sub">加载中…</div>
       </div>
     </div>
     <div class="health-row" style="margin-top:8px;">
@@ -306,9 +307,9 @@ body { background-attachment: fixed; overflow-x: hidden; }
           </div>
           <span class="hc-label">公网带宽</span>
         </div>
-        <div class="hc-value" data-metric="bw">0.8<span style="font-size:14px;font-weight:600;color:var(--text-secondary);">/3.0 Mbps</span></div>
-        <div class="hc-bar-wrap"><div class="hc-bar-fill bw" style="width:27%;"></div></div>
-        <div class="hc-sub">今日流量 42 MB</div>
+        <div class="hc-value" data-metric="bw">--<span style="font-size:14px;font-weight:600;color:var(--text-secondary);">/-- Mbps</span></div>
+        <div class="hc-bar-wrap"><div class="hc-bar-fill bw" style="width:0%;"></div></div>
+        <div class="hc-sub">加载中…</div>
       </div>
       <div class="health-card">
         <div class="hc-head">
@@ -317,9 +318,9 @@ body { background-attachment: fixed; overflow-x: hidden; }
           </div>
           <span class="hc-label">WS 连接</span>
         </div>
-        <div class="hc-value" data-metric="ws">7<span style="font-size:14px;font-weight:600;color:var(--text-secondary);"> 活跃</span></div>
-        <div class="hc-bar-wrap"><div class="hc-bar-fill ws" style="width:35%;"></div></div>
-        <div class="hc-sub">峰值 12 · 今日新建 34</div>
+        <div class="hc-value" data-metric="ws">--<span style="font-size:14px;font-weight:600;color:var(--text-secondary);"> 活跃</span></div>
+        <div class="hc-bar-wrap"><div class="hc-bar-fill ws" style="width:0%;"></div></div>
+        <div class="hc-sub">加载中…</div>
       </div>
     </div>
 
@@ -333,11 +334,11 @@ body { background-attachment: fixed; overflow-x: hidden; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         日志快照
       </button>
-      <button class="qa-btn" onclick="showToast('Token 统计已重置')">
+      <button class="qa-btn" onclick="doResetStats()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
         重置统计
       </button>
-      <button class="qa-btn caution" onclick="showToast('恢复将覆盖当前数据，请二次确认')">
+      <button class="qa-btn caution" onclick="showRestoreSheet()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         恢复备份
       </button>
@@ -351,7 +352,7 @@ body { background-attachment: fixed; overflow-x: hidden; }
         </div>
         全部用户
       </div>
-      <div class="sh-count">23 人</div>
+      <div class="sh-count" id="userCountBadge">加载中…</div>
     </div>
     <div class="table-card" data-table="users">
       <table>
@@ -372,7 +373,7 @@ body { background-attachment: fixed; overflow-x: hidden; }
         </div>
         全部 Bot
       </div>
-      <div class="sh-count">34 个</div>
+      <div class="sh-count" id="botCountBadge">加载中…</div>
     </div>
     <div class="table-card">
       <table>
@@ -445,16 +446,66 @@ body { background-attachment: fixed; overflow-x: hidden; }
   <div id="toast" class="toast"></div>
 </div>
 
+<style>
+#restoreSheet { position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:flex-end;justify-content:center; }
+#restoreSheet .modal-sheet { background:var(--bg-card,#fff);width:100%;max-width:420px;border-radius:16px 16px 0 0;padding:20px 20px 24px;box-shadow:0 -4px 24px rgba(0,0,0,0.15); }
+#restoreSheet .modal-title { font-size:16px;font-weight:700;margin-bottom:16px;color:var(--text-primary,#3A2030); }
+#restoreSheet .modal-option { width:100%;display:flex;align-items:center;padding:12px;margin-bottom:6px;border:1px solid rgba(0,0,0,0.06);border-radius:12px;background:transparent;cursor:pointer; }
+#restoreSheet .modal-cancel { width:100%;margin-top:12px;padding:12px;border:none;border-radius:12px;background:transparent;color:var(--text-secondary,#8A6A78);font-size:14px;font-weight:600;cursor:pointer; }
+</style>
+
+<!-- 恢复备份选择弹窗 -->
+<div class="modal-overlay hidden" id="restoreSheet">
+  <div class="modal-sheet">
+    <div class="modal-title">选择要恢复的备份</div>
+    <div id="restoreList" style="max-height:300px;overflow-y:auto;"></div>
+    <button class="modal-cancel" onclick="closeRestoreSheet()">取消</button>
+  </div>
+</div>
+
 <script src="shared/config.js"></script>
 <script src="shared/api.js"></script>
 <script src="shared/app.js"></script>
 <script>
 
 // Admin panel data loading
-if (API.isLoggedIn()) {
-  function loadAdminData() {
+function loadAdminData() {
+  if (!API.isLoggedIn()) {
+    showAdminError('请先登录', '您需要登录后才能访问开发者面板');
+    return;
+  }
+
+  // 权限检查：确认当前用户是管理员
+  API.getProfile().then(function(user) {
+    console.log('[admin] user role:', user.role, 'is_admin:', user.is_admin);
+    if (!user.is_admin && user.role !== 'admin') {
+      showAdminError('权限不足', '当前账号 (' + _esc(user.nickname || '') + ') 不是管理员，无法访问开发者面板。\n请联系管理员获取权限。');
+      return;
+    }
+    // 权限通过，加载数据
+    loadAllAdminSections();
+  }).catch(function(err) {
+    console.error('[admin] profile check failed:', err.message);
+    showAdminError('权限检查失败', err.message || '无法确认用户权限，请检查网络连接。');
+  });
+}
+
+function showAdminError(title, desc) {
+  var scrollArea = document.querySelector('.scroll-area');
+  if (!scrollArea) return;
+  var errDiv = document.createElement('div');
+  errDiv.style.cssText = 'margin:20px;padding:24px;background:rgba(255,255,255,0.9);backdrop-filter:blur(8px);border-radius:18px;border:1.5px solid rgba(255,107,107,0.2);text-align:center;';
+  errDiv.innerHTML = '<div style="font-size:18px;font-weight:800;color:#3A2030;margin-bottom:8px;">' + title + '</div>' +
+    '<div style="font-size:13px;color:#B090A0;line-height:1.8;white-space:pre-line;">' + desc.replace(/</g,'&lt;') + '</div>' +
+    '<div style="margin-top:12px;font-size:11px;color:#C0A0B0;">服务器: ' + _esc((window.APP_CONFIG && window.APP_CONFIG.server_base) || '未配置') + '</div>' +
+    '<button onclick="location.reload()" style="margin-top:16px;padding:10px 28px;border-radius:14px;background:#F472B6;color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">重试</button>';
+  scrollArea.insertBefore(errDiv, scrollArea.firstChild);
+}
+
+function loadAllAdminSections() {
     // System metrics
     API.getSystemMetrics().then(function(m) {
+      console.log('[admin] metrics:', JSON.stringify(m).substring(0, 200));
       var cpuEl = document.querySelector('[data-metric="cpu"]');
       var memEl = document.querySelector('[data-metric="mem"]');
       var bwEl = document.querySelector('[data-metric="bw"]');
@@ -484,13 +535,21 @@ if (API.isLoggedIn()) {
         var wsSub = wsEl.parentElement.querySelector('.hc-sub');
         if (wsSub) wsSub.textContent = '峰值 ' + (m.ws_peak || 0) + ' · 今日新建 ' + (m.ws_new_today || 0);
       }
-    }).catch(function() {});
+    }).catch(function(err) {
+      console.error('[admin] metrics failed:', err.message || err);
+      var errMsg = err.message || '未知错误';
+      // 显示具体错误信息
+      ['cpu','mem','bw','ws'].forEach(function(key) {
+        var el = document.querySelector('[data-metric="' + key + '"]');
+        if (el) el.innerHTML = '--<span style="font-size:11px;color:var(--text-muted);"> ' + _esc(errMsg.substring(0,20)) + '</span>';
+      });
+    });
     // Users
     API.getAdminUsers(1, 20).then(function(d) {
       var tbody = document.querySelector('[data-table="users"] tbody');
       if (tbody && d.users) {
         // Update user count badge
-        var userCountEl = document.querySelector('[data-table="users"]').parentElement.previousElementSibling.querySelector('.sh-count');
+        var userCountEl = document.getElementById('userCountBadge');
         if (userCountEl) userCountEl.textContent = (d.total || d.users.length) + ' 人';
         tbody.innerHTML = d.users.map(function(u) {
           var roleBadge = u.is_admin ? '<span class="badge-sm admin">管理员</span>' : '<span class="badge-sm user">用户</span>';
@@ -507,23 +566,30 @@ if (API.isLoggedIn()) {
           '</tr>';
         }).join('');
       }
-    }).catch(function() {});
+    }).catch(function(err) {
+      var errMsg = err.message || '未知错误';
+      console.error('[admin] users failed:', errMsg);
+      var tbody = document.querySelector('[data-table="users"] tbody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;color:#FF6B6B;font-size:12px;">加载失败: ' + _esc(errMsg) + '</td></tr>';
+      var countEl = document.getElementById('userCountBadge');
+      if (countEl) countEl.textContent = '异常';
+    });
     // Bots
     API.getAdminBots().then(function(d) {
-      // Find the bots table (second table-card after the bots section)
       var botSection = document.querySelector('.sh-icon.bots');
       if (!botSection) return;
       var botCard = botSection.closest('.section-header').nextElementSibling;
       if (!botCard || !botCard.classList.contains('table-card')) return;
       var botTbody = botCard.querySelector('tbody');
       if (!botTbody || !d.bots) return;
-      // Update bot count badge
-      var botCountEl = botSection.closest('.section-header').querySelector('.sh-count');
+      var botCountEl = document.getElementById('botCountBadge');
       if (botCountEl) botCountEl.textContent = d.bots.length + ' 个';
+      // 简化状态显示：is_active=true 即在线
       botTbody.innerHTML = d.bots.map(function(b) {
-        var statusHtml = b.is_active !== false
+        var isOnline = b.is_active !== false;
+        var statusHtml = isOnline
           ? '<span class="status-indicator"><span class="si-dot online"></span>活跃</span>'
-          : '<span class="status-indicator"><span class="si-dot offline"></span>离线</span>';
+          : '<span class="status-indicator"><span class="si-dot offline"></span>停用</span>';
         var createdDate = b.created_at ? new Date(b.created_at * 1000).toLocaleDateString('zh-CN', {month:'2-digit',day:'2-digit'}) : '--';
         return '<tr>' +
           '<td style="font-weight:700;">' + _esc(b.name || '') + '</td>' +
@@ -534,7 +600,14 @@ if (API.isLoggedIn()) {
           '<td>' + createdDate + '</td>' +
         '</tr>';
       }).join('');
-    }).catch(function() {});
+    }).catch(function(err) {
+      var errMsg = err.message || '未知错误';
+      console.error('[admin] bots failed:', errMsg);
+      var botTbody = document.getElementById('botsTbody');
+      if (botTbody) botTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;color:#FF6B6B;font-size:12px;">加载失败: ' + _esc(errMsg) + '</td></tr>';
+      var countEl = document.getElementById('botCountBadge');
+      if (countEl) countEl.textContent = '异常';
+    });
     // Token ranking
     API.getAdminTokensRanking('month').then(function(d) {
       var container = document.querySelector('[data-container="tokens-ranking"]');
@@ -561,7 +634,12 @@ if (API.isLoggedIn()) {
         summaryEl.innerHTML = '本月合计 <strong>&yen;' + (d.total_cost || 0).toFixed(2) + '</strong> · 预估全月 <strong>&yen;' + (d.estimated_monthly || 0).toFixed(2) + '</strong>' +
           ' · 缓存命中率 <strong>' + ((d.cache_hit_rate || 0) * 100).toFixed(1) + '%</strong>';
       }
-    }).catch(function() {});
+    }).catch(function(err) {
+      var errMsg = err.message || '未知错误';
+      console.error('[admin] tokens ranking failed:', errMsg);
+      var container = document.querySelector('[data-container="tokens-ranking"]');
+      if (container) container.innerHTML = '<div class="token-item"><span style="color:#FF6B6B;font-size:12px;padding:12px 0;display:block;text-align:center;">加载失败: ' + _esc(errMsg) + '</span></div>';
+    });
     // Backups
     API.getAdminBackups().then(function(d) {
       var container = document.querySelector('[data-container="backups"]');
@@ -591,7 +669,14 @@ if (API.isLoggedIn()) {
       } else {
         container.innerHTML = '<div class="backup-card"><div class="backup-info"><div class="bi-name" style="color:var(--text-secondary);">暂无备份</div></div></div>';
       }
-    }).catch(function() {});
+    }).catch(function(err) {
+      var errMsg = err.message || '未知错误';
+      console.error('[admin] backups failed:', errMsg);
+      var container = document.querySelector('[data-container="backups"]');
+      if (container) container.innerHTML = '<div class="backup-card"><div class="backup-info"><div class="bi-name" style="color:#FF6B6B;">加载失败: ' + _esc(errMsg) + '</div></div></div>';
+      var countEl = document.querySelector('[data-container="backups-count"]');
+      if (countEl) countEl.textContent = '异常';
+    });
     // Logs
     loadLogs('all');
   }
@@ -600,7 +685,6 @@ if (API.isLoggedIn()) {
   function formatTokens(n) { if (n >= 1000000) return (n/1000000).toFixed(1) + 'M'; if (n >= 1000) return (n/1000).toFixed(1) + 'K'; return String(n); }
   function formatSize(bytes) { if (bytes >= 1048576) return (bytes/1048576).toFixed(1) + ' MB'; if (bytes >= 1024) return (bytes/1024).toFixed(0) + ' KB'; return bytes + ' B'; }
   loadAdminData();
-}
 
 var currentLogLevel = 'all';
 function loadLogs(level) {
@@ -625,7 +709,12 @@ function loadLogs(level) {
     }).join('');
     // Apply current filter
     if (currentLogLevel !== 'all') applyLogFilter(currentLogLevel);
-  }).catch(function() {});
+  }).catch(function(err) {
+    var errMsg = err.message || '未知错误';
+    console.error('[admin] logs failed:', errMsg);
+    var container = document.querySelector('[data-container="logs"]');
+    if (container) container.innerHTML = '<div class="log-line"><span style="color:#FF6B6B;font-size:12px;">日志加载失败: ' + _esc(errMsg) + '</span></div>';
+  });
 }
 
 function applyLogFilter(level) {
@@ -667,15 +756,64 @@ function doLogSnapshot() {
   });
 }
 
-function showToast(msg) {
-  if (typeof window.showToast === 'function') {
-    window.showToast(msg);
-  } else {
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:rgba(26,26,46,0.92);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:1;transition:opacity 0.3s;pointer-events:none;';
-    setTimeout(function(){ toast.style.opacity = '0'; }, 2000);
-  }
+// ── 重置 Token 统计 ──
+function doResetStats() {
+  if (!confirm('确定要重置 Token 统计吗？此操作不可恢复。')) return;
+  showToast('重置中…');
+  API.resetAdminTokenStats().then(function() {
+    showToast('Token 统计已重置', 'success');
+    loadAdminData();
+  }).catch(function(e) {
+    showToast('重置失败: ' + e.message, 'error');
+  });
+}
+
+// ── 恢复备份（modal-sheet 替代 prompt）──
+var _restoreBackups = [];
+
+function showRestoreSheet() {
+  showToast('加载备份列表…');
+  API.getAdminBackups().then(function(d) {
+    if (!d.backups || !d.backups.length) {
+      showToast('暂无可用备份', 'error');
+      return;
+    }
+    _restoreBackups = d.backups;
+    var container = document.getElementById('restoreList');
+    container.innerHTML = d.backups.map(function(b, i) {
+      var t = new Date(b.created_at * 1000);
+      var timeStr = t.toLocaleDateString('zh-CN', {month:'2-digit',day:'2-digit'}) + ' ' +
+        t.toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'});
+      var sizeStr = formatSize(b.size || 0);
+      return '<button class="modal-option" onclick="doRestoreBackup(' + i + ')">' +
+        '<div style="text-align:left;">' +
+        '<div style="font-weight:700;">' + _esc(b.file_name || b.id) + '</div>' +
+        '<div style="font-size:11px;color:var(--text-secondary,#8A6A78);">' + timeStr + ' · ' + sizeStr + '</div>' +
+        '</div></button>';
+    }).join('');
+    document.getElementById('restoreSheet').classList.remove('hidden');
+  }).catch(function(e) {
+    showToast('获取备份列表失败: ' + e.message, 'error');
+  });
+}
+
+function closeRestoreSheet() {
+  document.getElementById('restoreSheet').classList.add('hidden');
+}
+
+function doRestoreBackup(idx) {
+  if (isNaN(idx) || idx < 0 || idx >= _restoreBackups.length) return;
+  var b = _restoreBackups[idx];
+  if (!confirm('确定恢复备份 "' + (b.file_name || b.id) + '" 吗？\n\n当前数据将被覆盖！')) return;
+  closeRestoreSheet();
+  showToast('恢复中…（服务可能需要重启）');
+  API.restoreBackup(b.id).then(function() {
+    showToast('备份恢复成功', 'success');
+    // 延迟刷新，等待后端恢复完成
+    setTimeout(function() { loadAdminData(); }, 3000);
+  }).catch(function(e) {
+    showToast('恢复失败: ' + e.message, 'error');
+  });
 }
 </script>
 

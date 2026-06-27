@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<title>新建 API Key — UI 原型</title>
+<link rel="stylesheet" href="shared/tokens.css">
+<link rel="stylesheet" href="shared/base.css">
+<link rel="stylesheet" href="shared/components.css">
+<link rel="stylesheet" href="shared/dark-mode.css">
+<link rel="stylesheet" href="shared/effects.css">
+<style>
+/* ===== 新建 API Key — 页面专属样式 ===== */
+.scroll-area { padding: 12px 0 8px; }
+
+/* 说明卡片 */
+.intro-card {
+  margin: 8px 20px; padding: 20px 16px;
+  background: linear-gradient(135deg, rgba(244,114,182,0.06) 0%, rgba(196,181,253,0.1) 100%);
+  border-radius: 18px; border: 1.5px solid rgba(244,114,182,0.15);
+  text-align: center;
+}
+.intro-icon {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(135deg, #F472B6, #C4B5FD);
+  margin: 0 auto 12px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 18px rgba(244,114,182,0.2);
+}
+.intro-icon svg { width: 28px; height: 28px; color: #fff; }
+.intro-title { font-size: 17px; font-weight: 800; color: #3A2030; margin-bottom: 4px; }
+.intro-desc { font-size: 12px; color: #B090A0; line-height: 1.5; }
+
+/* 表单 */
+.form-section { padding: 0 20px; }
+.field-group { margin-bottom: 16px; }
+.field-label {
+  display: block; font-size: 12px; font-weight: 700; color: #6A5060;
+  margin-bottom: 6px; margin-left: 4px;
+}
+.field-input {
+  width: 100%; padding: 12px 14px; border-radius: 14px;
+  border: 1.5px solid rgba(255,200,210,0.4);
+  background: rgba(255,255,255,0.95); font-size: 14px; font-family: inherit;
+  outline: none; transition: all 0.25s; color: #3A2030;
+  box-sizing: border-box;
+}
+.field-input:focus {
+  border-color: #F472B6; background: #fff;
+  box-shadow: 0 0 0 3px rgba(244,114,182,0.06);
+}
+.field-select {
+  width: 100%; padding: 12px 14px; border-radius: 14px;
+  border: 1.5px solid rgba(255,200,210,0.4);
+  background: rgba(255,255,255,0.95); font-size: 14px; font-family: inherit;
+  outline: none; transition: all 0.25s; color: #3A2030;
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23B090A0' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+  box-sizing: border-box;
+}
+.field-select:focus { border-color: #F472B6; }
+.field-hint { font-size: 11px; color: #C0A0B0; margin-top: 4px; margin-left: 4px; }
+
+/* 权限复选框 */
+.perm-section { margin-top: 8px; }
+.perm-title { font-size: 12px; font-weight: 700; color: #6A5060; margin-bottom: 8px; margin-left: 4px; }
+.perm-list { display: flex; flex-direction: column; gap: 6px; }
+.perm-item {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+  border-radius: 14px; background: rgba(0,0,0,0.015);
+  border: 1.5px solid rgba(0,0,0,0.04); cursor: pointer;
+  transition: all 0.2s;
+}
+.perm-item:hover { background: rgba(244,114,182,0.03); border-color: rgba(244,114,182,0.1); }
+.perm-item input[type="checkbox"] { accent-color: #F472B6; width: 18px; height: 18px; flex-shrink: 0; }
+.perm-info { flex: 1; }
+.perm-name { font-size: 14px; font-weight: 700; color: #3A2030; font-family: 'SF Mono','Cascadia Code',monospace; }
+.perm-desc { font-size: 11px; color: #B090A0; margin-top: 1px; }
+
+/* 过期选择 */
+.expire-row {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.expire-option {
+  flex: 1; min-width: calc(50% - 4px); padding: 12px; border-radius: 14px;
+  text-align: center; cursor: pointer; font-family: inherit;
+  background: rgba(255,255,255,0.7); border: 1.5px solid rgba(255,255,255,0.7);
+  font-size: 13px; font-weight: 600; color: #6A5060;
+  transition: all 0.2s;
+}
+.expire-option:hover { border-color: rgba(244,114,182,0.2); }
+.expire-option.selected { background: rgba(244,114,182,0.06); border-color: #F472B6; color: #F472B6; }
+
+/* 按钮 */
+.action-row {
+  display: flex; gap: 10px; margin: 24px 20px 8px;
+}
+.btn-create {
+  flex: 1; padding: 16px; border-radius: 16px; border: none; cursor: pointer;
+  font-size: 16px; font-weight: 700; font-family: inherit;
+  background: linear-gradient(135deg, #F472B6, #FF8095); color: #fff;
+  box-shadow: 0 4px 14px rgba(244,114,182,0.25); transition: all 0.2s;
+}
+.btn-create:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(244,114,182,0.35); }
+.btn-create:active { transform: scale(0.97); }
+.btn-create:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-cancel {
+  padding: 16px 24px; border-radius: 16px; border: none; cursor: pointer;
+  font-size: 16px; font-weight: 600; font-family: inherit;
+  background: rgba(0,0,0,0.04); color: #B090A0; transition: all 0.2s;
+}
+.btn-cancel:hover { background: rgba(0,0,0,0.08); }
+
+/* 创建成功弹窗 */
+.success-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+.success-overlay.hidden { display: none; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.success-card {
+  width: calc(100% - 40px); max-width: 340px;
+  background: #fff; border-radius: 20px; padding: 28px 24px;
+  text-align: center; box-shadow: 0 16px 48px rgba(0,0,0,0.15);
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes scaleIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.success-icon {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, #4CAF50, #66BB6A);
+  margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;
+}
+.success-icon svg { width: 32px; height: 32px; color: #fff; }
+.success-title { font-size: 18px; font-weight: 800; color: #3A2030; margin-bottom: 8px; }
+.success-key {
+  font-family: 'SF Mono','Cascadia Code',monospace; font-size: 12px;
+  background: rgba(0,0,0,0.03); border-radius: 10px; padding: 12px;
+  word-break: break-all; color: #3A2030; margin: 12px 0;
+  border: 1px solid rgba(0,0,0,0.06); cursor: pointer; user-select: all;
+}
+.success-warn { font-size: 11px; color: #FFB347; margin-top: 8px; line-height: 1.5; }
+.success-actions { display: flex; gap: 8px; margin-top: 16px; }
+.success-actions button {
+  flex: 1; padding: 12px; border-radius: 12px; border: none; cursor: pointer;
+  font-size: 14px; font-weight: 700; font-family: inherit; transition: all 0.2s;
+}
+.btn-copy { background: #F472B6; color: #fff; }
+.btn-done { background: rgba(0,0,0,0.04); color: #6A5060; }
+
+/* Dark mode */
+.phone.dark-mode .intro-card { background: rgba(244,114,182,0.05); border-color: rgba(244,114,182,0.12); }
+.phone.dark-mode .intro-title { color: #E0D8E8; }
+.phone.dark-mode .intro-desc { color: #8078A0; }
+.phone.dark-mode .field-label { color: #B0A0C0; }
+.phone.dark-mode .perm-title { color: #B0A0C0; }
+.phone.dark-mode .field-input, .phone.dark-mode .field-select {
+  background: #1A1A3E; border-color: rgba(255,255,255,0.08); color: #E0D8E8;
+}
+.phone.dark-mode .perm-item { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.04); }
+.phone.dark-mode .perm-name { color: #E0D8E8; }
+.phone.dark-mode .perm-desc { color: #8078A0; }
+.phone.dark-mode .expire-option { background: #16213E; border-color: rgba(255,255,255,0.06); color: #C0B8D0; }
+.phone.dark-mode .expire-option.selected { background: rgba(244,114,182,0.12); border-color: #F472B6; color: #F472B6; }
+.phone.dark-mode .btn-cancel { background: rgba(255,255,255,0.04); color: #9088A0; }
+.phone.dark-mode .success-card { background: #1A1A2E; }
+.phone.dark-mode .success-title { color: #E0D8E8; }
+.phone.dark-mode .success-key { background: rgba(255,255,255,0.04); color: #E0D8E8; border-color: rgba(255,255,255,0.06); }
+.phone.dark-mode .btn-done { background: rgba(255,255,255,0.04); color: #C0B8D0; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="title-bar">
+    <a class="back" href="API Key管理.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <span class="title">新建 API Key</span>
+  </div>
+
+  <div class="scroll-area">
+    <!-- 说明 -->
+    <div class="intro-card">
+      <div class="intro-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="12" r="6"/><path d="M13 9l7-7M16 2h5v5"/></svg>
+      </div>
+      <div class="intro-title">添加新的 API Key</div>
+      <div class="intro-desc">将第三方 AI 服务的 API Key 添加到你的账户<br>Bot 将使用该 Key 进行对话</div>
+    </div>
+
+    <!-- 表单 -->
+    <div class="form-section">
+      <div class="field-group">
+        <label class="field-label">提供商</label>
+        <select class="field-select" id="provider">
+          <option value="deepseek">DeepSeek</option>
+          <option value="kimi">Kimi (月之暗面)</option>
+          <option value="minimax">MiniMax</option>
+          <option value="mimo">Mimo</option>
+          <option value="glm">GLM (智谱)</option>
+          <option value="qwen_vl">Qwen VL (通义千问)</option>
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Anthropic</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Key 名称</label>
+        <input class="field-input" type="text" id="keyName" placeholder="例：移动端 App、测试环境" maxlength="30">
+        <div class="field-hint">给 Key 取个名字方便管理</div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">API Key</label>
+        <input class="field-input" type="text" id="keyValue" placeholder="粘贴你的 API Key，如 sk-..." style="font-family:'SF Mono','Cascadia Code',monospace;font-size:13px;">
+        <div class="field-hint">Key 仅用于服务端调用，不会存储在客户端</div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">权限范围</label>
+        <div class="perm-list">
+          <label class="perm-item">
+            <input type="checkbox" checked data-perm="chat">
+            <div class="perm-info">
+              <div class="perm-name">chat</div>
+              <div class="perm-desc">聊天对话 — Bot 的核心能力</div>
+            </div>
+          </label>
+          <label class="perm-item">
+            <input type="checkbox" checked data-perm="image">
+            <div class="perm-info">
+              <div class="perm-name">image</div>
+              <div class="perm-desc">图像生成 — AI 绘图功能</div>
+            </div>
+          </label>
+          <label class="perm-item">
+            <input type="checkbox" data-perm="voice">
+            <div class="perm-info">
+              <div class="perm-name">voice</div>
+              <div class="perm-desc">语音合成 — TTS 文字转语音</div>
+            </div>
+          </label>
+          <label class="perm-item">
+            <input type="checkbox" data-perm="memory">
+            <div class="perm-info">
+              <div class="perm-name">memory</div>
+              <div class="perm-desc">记忆存储 — 长期记忆与上下文</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">过期时间</label>
+        <div class="expire-row">
+          <button class="expire-option selected" onclick="selectExpire('never', this)">永不过期</button>
+          <button class="expire-option" onclick="selectExpire('30', this)">30 天</button>
+          <button class="expire-option" onclick="selectExpire('90', this)">90 天</button>
+          <button class="expire-option" onclick="selectExpire('180', this)">180 天</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="action-row">
+      <button class="btn-cancel" onclick="history.back()">取消</button>
+      <button class="btn-create" id="createBtn" onclick="doCreate()">创建 Key</button>
+    </div>
+    <div style="height:20px;"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- 成功弹窗 -->
+  <div class="success-overlay hidden" id="successOverlay" onclick="if(event.target===this)closeSuccess()">
+    <div class="success-card">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="success-title">Key 创建成功！</div>
+      <div class="success-key" id="successKeyValue" onclick="copyCreatedKey()">--</div>
+      <div class="success-warn">请立即复制保存此 Key，关闭后将无法再次查看完整值。</div>
+      <div class="success-actions">
+        <button class="btn-done" onclick="closeSuccess()">完成</button>
+        <button class="btn-copy" onclick="copyCreatedKey()">复制 Key</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="shared/config.js"></script>
+<script src="shared/api.js"></script>
+<script src="shared/app.js"></script>
+<script>
+var expireDays = 'never';
+var createdKeyValue = '';
+
+function selectExpire(val, btn) {
+  expireDays = val;
+  document.querySelectorAll('.expire-option').forEach(function(b) { b.classList.remove('selected'); });
+  if (btn) btn.classList.add('selected');
+}
+
+function doCreate() {
+  var name = document.getElementById('keyName').value.trim();
+  var keyValue = document.getElementById('keyValue').value.trim();
+  var provider = document.getElementById('provider').value;
+
+  if (!name) { showToast('请填写 Key 名称'); return; }
+  if (!keyValue) { showToast('请填写 API Key'); return; }
+  if (keyValue.length < 10) { showToast('API Key 格式不正确'); return; }
+
+  var scopes = [];
+  document.querySelectorAll('[data-perm]').forEach(function(cb) {
+    if (cb.checked) scopes.push(cb.getAttribute('data-perm'));
+  });
+  if (!scopes.length) { showToast('请至少选择一项权限'); return; }
+
+  var data = {
+    name: name,
+    provider: provider,
+    key_value: keyValue,
+    scopes: scopes
+  };
+
+  if (expireDays !== 'never') {
+    var expireDate = new Date();
+    expireDate.setDate(expireDate.getDate() + parseInt(expireDays));
+    data.expires_at = Math.floor(expireDate.getTime() / 1000);
+  }
+
+  var btn = document.getElementById('createBtn');
+  btn.disabled = true;
+  btn.textContent = '创建中…';
+  showToast('创建中…');
+
+  API.createApiKey(data).then(function(result) {
+    btn.disabled = false;
+    btn.textContent = '创建 Key';
+    // 显示成功弹窗
+    createdKeyValue = result.key || result.api_key || keyValue;
+    document.getElementById('successKeyValue').textContent = createdKeyValue;
+    document.getElementById('successOverlay').classList.remove('hidden');
+  }).catch(function(err) {
+    btn.disabled = false;
+    btn.textContent = '创建 Key';
+    showToast('创建失败: ' + (err.message || '未知错误'), 'error');
+  });
+}
+
+function copyCreatedKey() {
+  if (!createdKeyValue) return;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(createdKeyValue).then(function() {
+      showToast('已复制到剪贴板 ✓');
+    });
+  } else {
+    showToast('Key: ' + createdKeyValue);
+  }
+}
+
+function closeSuccess() {
+  document.getElementById('successOverlay').classList.add('hidden');
+  location.href = 'API Key管理.html';
+}
+</script>
+</body>
+</html>

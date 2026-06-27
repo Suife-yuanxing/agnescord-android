@@ -12,6 +12,7 @@
 <style>
 /* ===== API Key 管理 — 页面专属样式 ===== */
 body { background-attachment: fixed; overflow-x: hidden; }
+/* P6：与其他页面相同的顶部间距（由 base.css 统一管理） */
 
 .title-bar { overflow: hidden; }
 .title-bar::after {
@@ -178,87 +179,34 @@ body { background-attachment: fixed; overflow-x: hidden; }
 <div class="phone">
   <div class="title-bar">
     <span class="title">API Key</span>
-    <button class="add-btn" onclick="toggleNewForm()" title="新建 Key">
+    <a class="add-btn" href="APIKey新建.html" title="新建 Key">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    </button>
+    </a>
   </div>
 
   <div class="usage-summary">
-    <div class="usage-item"><div class="val c-pink" id="totalCalls">1,283</div><div class="lbl">总调用</div></div>
+    <div class="usage-item"><div class="val c-pink" id="totalCalls">--</div><div class="lbl">总调用</div></div>
     <div class="usage-divider"></div>
-    <div class="usage-item"><div class="val c-purple">3</div><div class="lbl">活跃 Key</div></div>
+    <div class="usage-item"><div class="val c-purple" id="activeKeys">--</div><div class="lbl">活跃 Key</div></div>
     <div class="usage-divider"></div>
-    <div class="usage-item"><div class="val c-orange">98.7%</div><div class="lbl">成功率</div></div>
+    <div class="usage-item"><div class="val c-orange" id="successRate">--</div><div class="lbl">成功率</div></div>
   </div>
 
   <div class="tab-row">
     <button class="tab-btn active" onclick="switchTab('keys', this)">我的 Key</button>
-    <button class="tab-btn" onclick="switchTab('usage', this)">用量明细</button>
+    <a class="tab-btn" href="APIKey用量明细.html" style="text-decoration:none;">用量明细 ↗</a>
   </div>
 
   <div class="scroll-area" id="scrollArea">
     <div id="keysTab">
-      <div class="key-card" id="key-1">
-        <div class="key-name-row">
-          <span class="key-name"><svg viewBox="0 0 24 24" fill="none" stroke="#F472B6" stroke-width="1.8" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="8" cy="12" r="6"/><path d="M13 9l7-7M16 2h5v5"/></svg>生产环境</span>
-          <span class="key-status active">● 活跃</span>
-        </div>
-        <div class="key-masked" onclick="copyKey('sk-prod-8a3f2...c91d', this)" title="点击复制"><span class="mask-dot">sk-prod-8a3f2••••••••c91d</span></div>
-        <div class="perms"><span class="perm-tag">chat</span><span class="perm-tag">image</span><span class="perm-tag">voice</span><span class="perm-tag">memory</span></div>
-        <div class="key-info-row">
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>创建于 2026-03-15</span>
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 12a8 8 0 11-16 0 8 8 0 0116 0z"/><path d="M12 8v4l2 2"/></svg>最近调用 2 分钟前</span>
-        </div>
-        <div class="key-actions"><button class="key-act copy" onclick="copyKey('sk-prod-8a3f2...c91d', this)">复制</button><button class="key-act revoke" onclick="revokeKey('key-1')">吊销</button></div>
-      </div>
-
-      <div class="key-card" id="key-2">
-        <div class="key-name-row">
-          <span class="key-name"><svg viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="1.8" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="8" cy="12" r="6"/><path d="M13 9l7-7M16 2h5v5"/></svg>开发测试</span>
-          <span class="key-status active">● 活跃</span>
-        </div>
-        <div class="key-masked" onclick="copyKey('sk-dev-7b1e9...d45a', this)" title="点击复制"><span class="mask-dot">sk-dev-7b1e9••••••••d45a</span></div>
-        <div class="perms"><span class="perm-tag">chat</span><span class="perm-tag">image</span></div>
-        <div class="key-info-row">
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>创建于 2026-06-01</span>
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 12a8 8 0 11-16 0 8 8 0 0116 0z"/><path d="M12 8v4l2 2"/></svg>最近调用 1 小时前</span>
-        </div>
-        <div class="key-actions"><button class="key-act copy" onclick="copyKey('sk-dev-7b1e9...d45a', this)">复制</button><button class="key-act revoke" onclick="revokeKey('key-2')">吊销</button></div>
-      </div>
-
-      <div class="key-card" id="key-3" style="opacity:0.5;">
-        <div class="key-name-row">
-          <span class="key-name"><svg viewBox="0 0 24 24" fill="none" stroke="#C0A0B0" stroke-width="1.8" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="8" cy="12" r="6"/><path d="M13 9l7-7M16 2h5v5"/></svg>临时测试</span>
-          <span class="key-status revoked">已吊销</span>
-        </div>
-        <div class="key-masked"><span class="mask-dot" style="text-decoration:line-through;">sk-tmp-••••••••••••</span></div>
-        <div class="perms"><span class="perm-tag">chat</span></div>
-        <div class="key-info-row"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>创建于 2026-05-20 · 吊销于 2026-06-10</span></div>
+      <div class="key-card" style="text-align:center;padding:32px;">
+        <div style="font-size:14px;color:#B090A0;">加载中…</div>
       </div>
     </div>
 
     <div id="usageTab" style="display:none;">
-      <div class="key-card">
-        <div style="font-size:14px;font-weight:700;color:#3A2030;margin-bottom:12px;">生产环境 — 近7天调用</div>
-        <div style="display:flex;align-items:flex-end;gap:8px;height:120px;padding:4px 0;">
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:85px;background:linear-gradient(180deg,#F472B6,#FFB0C0);border-radius:6px 6px 2px 2px;"></div><span style="font-size:10px;color:#B090A0;">一</span></div>
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:60px;background:linear-gradient(180deg,#F472B6,#FFB0C0);border-radius:6px 6px 2px 2px;"></div><span style="font-size:10px;color:#B090A0;">二</span></div>
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:100px;background:linear-gradient(180deg,#F472B6,#FFB0C0);border-radius:6px 6px 2px 2px;"></div><span style="font-size:10px;color:#B090A0;">三</span></div>
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:72px;background:linear-gradient(180deg,#F472B6,#FFB0C0);border-radius:6px 6px 2px 2px;"></div><span style="font-size:10px;color:#B090A0;">四</span></div>
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:110px;background:linear-gradient(180deg,#F472B6,#FFB0C0);border-radius:6px 6px 2px 2px;"></div><span style="font-size:10px;color:#B090A0;">五</span></div>
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:95px;background:linear-gradient(180deg,#F472B6,#FFB0C0);border-radius:6px 6px 2px 2px;"></div><span style="font-size:10px;color:#B090A0;">六</span></div>
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:45px;background:linear-gradient(180deg,#F472B6,#FFB0C0);border-radius:6px 6px 2px 2px;"></div><span style="font-size:10px;color:#B090A0;">日</span></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:#B090A0;"><span>日均: 183 次</span><span>峰值: 287 次 (周五)</span><span>总计: 1,283 次</span></div>
-      </div>
-      <div class="key-card">
-        <div style="font-size:14px;font-weight:700;color:#3A2030;margin-bottom:10px;">端点分布（本月）</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12px;width:55px;color:#B090A0;">/chat</span><div style="flex:1;height:8px;background:#FFF0F3;border-radius:4px;overflow:hidden;"><div style="width:58%;height:100%;background:#F472B6;border-radius:4px;"></div></div><span style="font-size:11px;color:#3A2030;font-weight:600;width:35px;text-align:right;">58%</span></div>
-          <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12px;width:55px;color:#B090A0;">/image</span><div style="flex:1;height:8px;background:#FFF0F3;border-radius:4px;overflow:hidden;"><div style="width:22%;height:100%;background:#C4B5FD;border-radius:4px;"></div></div><span style="font-size:11px;color:#3A2030;font-weight:600;width:35px;text-align:right;">22%</span></div>
-          <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12px;width:55px;color:#B090A0;">/voice</span><div style="flex:1;height:8px;background:#FFF0F3;border-radius:4px;overflow:hidden;"><div style="width:13%;height:100%;background:#FFB347;border-radius:4px;"></div></div><span style="font-size:11px;color:#3A2030;font-weight:600;width:35px;text-align:right;">13%</span></div>
-          <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12px;width:55px;color:#B090A0;">/memory</span><div style="flex:1;height:8px;background:#FFF0F3;border-radius:4px;overflow:hidden;"><div style="width:7%;height:100%;background:#B794F4;border-radius:4px;"></div></div><span style="font-size:11px;color:#3A2030;font-weight:600;width:35px;text-align:right;">7%</span></div>
-        </div>
+      <div class="key-card" style="text-align:center;padding:32px;color:#B090A0;">
+        点击“用量明细”加载
       </div>
     </div>
   </div>
@@ -322,11 +270,11 @@ body { background-attachment: fixed; overflow-x: hidden; }
     if (!apiReady()) return;
     API.getApiKeyUsageSummary().then(function(d) {
       var totalEl = document.getElementById('totalCalls');
-      var activeEl = document.querySelector('.usage-item:nth-child(3) .val');
-      var successEl = document.querySelector('.usage-item:nth-child(5) .val');
+      var activeEl = document.getElementById('activeKeys');
+      var successEl = document.getElementById('successRate');
       if (totalEl) totalEl.textContent = (d.total_calls || 0).toLocaleString();
       if (activeEl) activeEl.textContent = d.active_keys || 0;
-      if (successEl) successEl.textContent = (d.success_rate ? (d.success_rate*100).toFixed(1)+'%' : '--');
+      if (successEl) successEl.textContent = (d.success_rate != null ? (d.success_rate*100).toFixed(1)+'%' : '--');
     }).catch(function() {});
   }
 

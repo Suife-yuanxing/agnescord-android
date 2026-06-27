@@ -1,7 +1,9 @@
 package com.deepseekqq.agnescord;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Handler;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
@@ -25,9 +27,18 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.pm.PackageInfoCompat;
 import androidx.core.splashscreen.SplashScreen;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+
+import com.deepseekqq.agnescord.util.AppForegroundTracker;
+import com.deepseekqq.agnescord.util.AppUpdateChecker;
+import com.deepseekqq.agnescord.util.NotificationChannelHelper;
+import com.deepseekqq.agnescord.util.PollingScheduler;
+import com.deepseekqq.agnescord.util.TokenStore;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +52,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "Agnescord";
+    private static final int REQUEST_CODE_POST_NOTIFICATIONS = 1001;
     private WebView webView;
     private NativeBridge nativeBridge;
     // 文件上传：WebView onShowFileChooser 回调
@@ -52,6 +64,19 @@ public class MainActivity extends AppCompatActivity {
         // ── MUST be called before super.onCreate() for SplashScreen API ──
         SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
+
+        // ── P0-1：通知渠道注册（幂等）──
+        NotificationChannelHelper.createChannels(this);
+
+        // ── P0-2：Android 13+ (API 33) 运行时请求 POST_NOTIFICATIONS 权限 ──
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        REQUEST_CODE_POST_NOTIFICATIONS);
+            }
+        }
 
         // ── Edge-to-edge immersive mode ──
         Window window = getWindow();
@@ -110,6 +135,18 @@ public class MainActivity extends AppCompatActivity {
         // ── Load entry page ──
         webView.loadUrl("file:///android_asset/启动页.html");
 
+        // ── P0-3：处理冷启动通知点击 ──
+        handleNotificationIntent(getIntent());
+
+        // ── P0-4：延迟 3s 检查版本（不依赖特定 HTML 页面名，避免 URL 加载失败跳过）──
+        new Handler().postDelayed(() -> AppUpdateChecker.check(MainActivity.this), 3000);
+
+        // ── P0-2：已有 token 时启动轮询保活（开机后冷启动 / App 进程被杀后恢复）──
+        if (TokenStore.hasToken(this)) {
+            PollingScheduler.schedule(this);
+            PollingScheduler.startService(this);
+        }
+
         // ── A3：键盘适配 — 仅传键盘 CSS 高度给 JS，由 JS 单独移动输入栏 ──
         final View rootView = getWindow().getDecorView().findViewById(android.R.id.content);
         rootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -159,6 +196,9 @@ public class MainActivity extends AppCompatActivity {
         // Allow file access (for assets)
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
+
+        // CORS: file:// → http:// 跨域（APK 本地加载 HTML，API 请求到远程服务器）
+        settings.setAllowUniversalAccessFromFileURLs(true);
 
         // Text zoom: prevent system font size from breaking layout
         settings.setTextZoom(100);
@@ -521,6 +561,106 @@ public class MainActivity extends AppCompatActivity {
                     voicePlayer = null;
                 }
             });
+        }
+
+        // ════════════════════════════════════════
+        //  P0-5：NativeBridge 扩展（供 JS 调用）
+        // ════════════════════════════════════════
+
+        /** P0-5：返回 App 的 versionCode (int) */
+        @JavascriptInterface
+        public int getAppVersionCode() {
+            try {
+                return (int) PackageInfoCompat.getLongVersionCode(
+                        getPackageManager().getPackageInfo(getPackageName(), 0));
+            } catch (Exception e) {
+                return 0;
+            }
+        }
+
+        /** P0-5：返回 App 的 versionName（展示用） */
+        @JavascriptInterface
+        public String getAppVersionName() {
+            try {
+                String v = getPackageManager()
+                        .getPackageInfo(getPackageName(), 0).versionName;
+                return v != null ? v : "0.0.0";
+            } catch (Exception e) {
+                return "0.0.0";
+            }
+        }
+
+        /** P0-5：JS 触发打开应用商店（更新） */
+        @JavascriptInterface
+        public void updateApp() {
+            runOnUiThread(() -> AppUpdateChecker.openAppStore(MainActivity.this, null));
+        }
+
+        /** P0-5：JS 查询 App 前后台状态 */
+        @JavascriptInterface
+        public String isForeground() {
+            return AppForegroundTracker.getInstance().isForeground() ? "true" : "false";
+        }
+
+        /** P0-2：JS 登录后启动轮询服务（幂等） */
+        @JavascriptInterface
+        public void startPollingService() {
+            PollingScheduler.schedule(MainActivity.this);
+            PollingScheduler.startService(MainActivity.this);
+        }
+
+        /** P0-2：JS 登出后停止轮询服务 */
+        @JavascriptInterface
+        public void stopPollingService() {
+            PollingScheduler.stopService(MainActivity.this);
+        }
+
+        /** P0-2：JS 将 JWT token 同步到原生端（setTokens 统一调用） */
+        @JavascriptInterface
+        public void saveTokens(String access, String refresh) {
+            TokenStore.saveTokens(MainActivity.this, access, refresh);
+        }
+
+        /** P0-2：JS 清除原生端 JWT token（clearTokens 统一调用） */
+        @JavascriptInterface
+        public void clearNativeTokens() {
+            TokenStore.clearTokens(MainActivity.this);
+        }
+    }
+
+    // ────────────────────────────────────────
+    //  P0-3：通知点击处理
+    // ────────────────────────────────────────
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleNotificationIntent(intent);
+    }
+
+    /**
+     * 解析通知 Intent 携带的 target_url，通过 evaluateJavascript 通知 JS 跳转。
+     * 使用 JSONObject.quote 对 URL 做标准 JSON 字符串转义，防止注入。
+     */
+    private void handleNotificationIntent(Intent intent) {
+        if (intent == null) return;
+        String targetUrl = intent.getStringExtra("target_url");
+        if (targetUrl == null) {
+            Uri data = intent.getData();
+            if (data != null) {
+                targetUrl = data.getQueryParameter("page");
+                if (targetUrl == null) targetUrl = data.toString();
+            }
+        }
+        if (targetUrl != null && webView != null) {
+            try {
+                // JSONObject.quote 做标准 JSON 字符串转义（含引号包裹，避免特殊字符 / 引号注入）
+                String escaped = JSONObject.quote(targetUrl);
+                webView.evaluateJavascript(
+                        "if(window.handleNotification){" +
+                                "window.handleNotification(" + escaped + ");}", null);
+            } catch (Exception e) {
+                android.util.Log.w(TAG, "handleNotificationIntent error: " + e.getMessage());
+            }
         }
     }
 

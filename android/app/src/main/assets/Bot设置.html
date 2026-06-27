@@ -292,13 +292,8 @@ window.saveSettings = function() {
     for (var i = 0; i < allSliders.length; i++) {
       var oninput = allSliders[i].getAttribute('oninput') || '';
       if (oninput.indexOf(cfg[0]) !== -1) {
-        var v = parseInt(allSliders[i].value);
-        if (cfg[2]) {
-          var idx = Math.min(Math.floor(v / (allSliders[i].max / (cfg[2].length - 1))), cfg[2].length - 1);
-          data[cfg[1]] = idx;
-        } else {
-          data[cfg[1]] = v;
-        }
+        // 保存原始滑块值，不转索引 — 标签仅用于UI显示
+        data[cfg[1]] = parseInt(allSliders[i].value);
         break;
       }
     }

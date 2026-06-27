@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<title>用量明细 — UI 原型</title>
+<link rel="stylesheet" href="shared/tokens.css">
+<link rel="stylesheet" href="shared/base.css">
+<link rel="stylesheet" href="shared/components.css">
+<link rel="stylesheet" href="shared/dark-mode.css">
+<link rel="stylesheet" href="shared/effects.css">
+<style>
+/* ===== 用量明细 — 页面专属样式 ===== */
+.scroll-area { padding: 12px 0 8px; }
+
+/* 汇总卡片 */
+.summary-card {
+  margin: 8px 20px; padding: 20px 16px;
+  background: linear-gradient(135deg, #F472B6 0%, #FF8095 40%, #FFB0A0 100%);
+  border-radius: 18px; color: #fff;
+  box-shadow: 0 8px 24px rgba(244,114,182,0.25);
+  position: relative; overflow: hidden;
+}
+.summary-card::after {
+  content: ''; position: absolute; top: -30%; left: -30%;
+  width: 80%; height: 100%;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.summary-row {
+  display: flex; justify-content: space-around; position: relative; z-index: 1;
+}
+.summary-item { text-align: center; }
+.summary-item .val { font-size: 28px; font-weight: 800; }
+.summary-item .lbl { font-size: 11px; opacity: 0.8; margin-top: 4px; }
+
+/* 时间筛选 */
+.time-filters {
+  display: flex; gap: 6px; margin: 10px 20px 0;
+}
+.time-filter {
+  padding: 6px 14px; border-radius: 14px; border: none; cursor: pointer;
+  font-size: 12px; font-weight: 700; font-family: inherit;
+  background: rgba(100,100,120,0.05); color: #B090A0; transition: all 0.2s;
+}
+.time-filter.active { background: rgba(244,114,182,0.08); color: #F472B6; }
+
+/* 柱状图 */
+.chart-card {
+  margin: 10px 20px; padding: 16px;
+  background: rgba(255,255,255,0.7); backdrop-filter: blur(8px);
+  border-radius: 18px; border: 1.5px solid rgba(255,255,255,0.7);
+  box-shadow: 0 3px 12px rgba(100,100,120,0.05);
+}
+.chart-title { font-size: 14px; font-weight: 700; color: #3A2030; margin-bottom: 14px; }
+.bar-chart {
+  display: flex; align-items: flex-end; gap: 6px; height: 140px; padding: 4px 0;
+}
+.bar-col {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.bar-fill {
+  width: 100%; border-radius: 6px 6px 2px 2px; transition: height 0.4s ease;
+  background: linear-gradient(180deg, #F472B6, #FFB0C0);
+  min-height: 4px;
+}
+.bar-label { font-size: 10px; color: #B090A0; }
+.bar-value { font-size: 9px; color: #F472B6; font-weight: 700; }
+
+/* 明细列表 */
+.detail-card {
+  margin: 10px 20px; padding: 16px;
+  background: rgba(255,255,255,0.7); backdrop-filter: blur(8px);
+  border-radius: 18px; border: 1.5px solid rgba(255,255,255,0.7);
+  box-shadow: 0 3px 12px rgba(100,100,120,0.05);
+}
+.detail-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-top: 1px solid rgba(0,0,0,0.03);
+}
+.detail-row:first-child { border-top: none; }
+.detail-label { font-size: 13px; font-weight: 600; color: #3A2030; }
+.detail-sub { font-size: 11px; color: #B090A0; margin-top: 2px; }
+.detail-value { font-size: 15px; font-weight: 800; color: #F472B6; text-align: right; }
+.detail-sub-value { font-size: 10px; color: #B090A0; text-align: right; }
+
+/* Key 维度 */
+.key-selector {
+  display: flex; gap: 6px; margin: 10px 20px 0; overflow-x: auto;
+  scrollbar-width: none; padding: 4px 0;
+}
+.key-selector::-webkit-scrollbar { display: none; }
+.key-chip {
+  flex-shrink: 0; padding: 8px 16px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  background: rgba(100,100,120,0.05); color: #B090A0;
+  border: 1.5px solid transparent; transition: all 0.2s; font-family: inherit;
+}
+.key-chip.active { background: rgba(244,114,182,0.08); color: #F472B6; border-color: rgba(244,114,182,0.2); }
+
+/* Dark mode */
+.phone.dark-mode .summary-card { box-shadow: 0 8px 24px rgba(244,114,182,0.15); }
+.phone.dark-mode .chart-card, .phone.dark-mode .detail-card { background: #16213E; border-color: rgba(255,255,255,0.06); }
+.phone.dark-mode .chart-title { color: #E0D8E8; }
+.phone.dark-mode .bar-label { color: #8078A0; }
+.phone.dark-mode .detail-label { color: #E0D8E8; }
+.phone.dark-mode .detail-sub { color: #8078A0; }
+.phone.dark-mode .detail-row { border-top-color: rgba(255,255,255,0.04); }
+.phone.dark-mode .time-filter { background: rgba(255,255,255,0.04); color: #8078A0; }
+.phone.dark-mode .time-filter.active { background: rgba(244,114,182,0.12); color: #F9A8D4; }
+.phone.dark-mode .key-chip { background: rgba(255,255,255,0.04); color: #8078A0; }
+.phone.dark-mode .key-chip.active { background: rgba(244,114,182,0.1); color: #F9A8D4; border-color: rgba(244,114,182,0.2); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="title-bar">
+    <a class="back" href="API Key管理.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <span class="title">用量明细</span>
+  </div>
+
+  <div class="scroll-area">
+    <!-- 汇总卡片 -->
+    <div class="summary-card">
+      <div class="summary-row">
+        <div class="summary-item">
+          <div class="val" id="sumTotal">--</div>
+          <div class="lbl">总调用</div>
+        </div>
+        <div class="summary-item">
+          <div class="val" id="sumKeys">--</div>
+          <div class="lbl">活跃 Key</div>
+        </div>
+        <div class="summary-item">
+          <div class="val" id="sumRate">--</div>
+          <div class="lbl">成功率</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 时间筛选 -->
+    <div class="time-filters">
+      <button class="time-filter" onclick="setRange('7d', this)">7天</button>
+      <button class="time-filter active" onclick="setRange('30d', this)">30天</button>
+      <button class="time-filter" onclick="setRange('90d', this)">90天</button>
+    </div>
+
+    <!-- Key 筛选 -->
+    <div class="key-selector" id="keySelector">
+      <button class="key-chip active" onclick="selectKey('all', this)">全部 Key</button>
+    </div>
+
+    <!-- 调用趋势图 -->
+    <div class="chart-card">
+      <div class="chart-title">调用趋势</div>
+      <div class="bar-chart" id="barChart">
+        <div style="text-align:center;width:100%;padding:40px 0;color:#B090A0;font-size:13px;">加载中…</div>
+      </div>
+    </div>
+
+    <!-- 分类明细 -->
+    <div class="detail-card">
+      <div class="chart-title">分类统计</div>
+      <div id="categoryDetails">
+        <div style="text-align:center;padding:20px;color:#B090A0;font-size:13px;">加载中…</div>
+      </div>
+    </div>
+
+    <!-- 端点排行 -->
+    <div class="detail-card">
+      <div class="chart-title">端点调用排行</div>
+      <div id="endpointDetails">
+        <div style="text-align:center;padding:20px;color:#B090A0;font-size:13px;">加载中…</div>
+      </div>
+    </div>
+
+    <div style="height:20px;"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="shared/config.js"></script>
+<script src="shared/api.js"></script>
+<script src="shared/app.js"></script>
+<script>
+var currentRange = '30d';
+var currentKeyId = 'all';
+
+function setRange(range, btn) {
+  currentRange = range;
+  document.querySelectorAll('.time-filter').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  loadData();
+}
+
+function selectKey(id, btn) {
+  currentKeyId = id;
+  document.querySelectorAll('.key-chip').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  loadChartData();
+}
+
+function loadData() {
+  loadSummary();
+  loadKeySelector();
+  loadChartData();
+  loadEndpoints();
+}
+
+function loadSummary() {
+  API.getApiKeyUsageSummary().then(function(d) {
+    var totalEl = document.getElementById('sumTotal');
+    var keysEl = document.getElementById('sumKeys');
+    var rateEl = document.getElementById('sumRate');
+    if (totalEl) totalEl.textContent = (d.total_calls || 0).toLocaleString();
+    if (keysEl) keysEl.textContent = d.active_keys || 0;
+    if (rateEl) rateEl.textContent = d.success_rate != null ? (d.success_rate * 100).toFixed(1) + '%' : '--';
+  }).catch(function(err) {
+    showToast('加载汇总失败: ' + (err.message || ''));
+  });
+}
+
+function loadKeySelector() {
+  API.getApiKeys().then(function(d) {
+    var selector = document.getElementById('keySelector');
+    if (!selector || !d.keys) return;
+    var html = '<button class="key-chip' + (currentKeyId === 'all' ? ' active' : '') + '" onclick="selectKey(\'all\', this)">全部 Key</button>';
+    d.keys.forEach(function(k) {
+      if (k.status === 'active') {
+        html += '<button class="key-chip' + (currentKeyId === String(k.id) ? ' active' : '') + '" onclick="selectKey(\'' + k.id + '\', this)">' + _esc(k.name || k.key_suffix || 'Key #' + k.id) + '</button>';
+      }
+    });
+    selector.innerHTML = html;
+  }).catch(function() {});
+}
+
+function loadChartData() {
+  var chartEl = document.getElementById('barChart');
+  if (!chartEl) return;
+  chartEl.innerHTML = '<div style="text-align:center;width:100%;padding:40px 0;color:#B090A0;font-size:13px;">加载中…</div>';
+
+  var promise;
+  if (currentKeyId === 'all') {
+    promise = API.getApiKeyUsageSummary();
+  } else {
+    promise = API.getApiKeyUsage(currentKeyId, currentRange);
+  }
+
+  promise.then(function(d) {
+    var daily = d.daily || d.by_day || [];
+    if (!daily.length) {
+      // 如果没有 daily 数据，用汇总数据模拟
+      chartEl.innerHTML = '<div style="text-align:center;width:100%;padding:40px 0;color:#B090A0;font-size:13px;">暂无趋势数据</div>';
+      return;
+    }
+    var maxVal = Math.max.apply(null, daily.map(function(x) { return x.calls || x.count || 0; })) || 1;
+    var days = daily.length <= 7 ? ['一','二','三','四','五','六','日'] : null;
+
+    chartEl.innerHTML = daily.map(function(item, i) {
+      var val = item.calls || item.count || 0;
+      var h = Math.round(val / maxVal * 120);
+      var label = days ? days[i] : (item.date || String(i + 1));
+      if (!days && item.date) {
+        var parts = item.date.split('-');
+        label = parts.length >= 3 ? parts[1] + '/' + parts[2] : item.date;
+      }
+      return '<div class="bar-col">' +
+        '<div class="bar-value">' + val + '</div>' +
+        '<div class="bar-fill" style="height:' + Math.max(h, 4) + 'px;"></div>' +
+        '<div class="bar-label">' + label + '</div>' +
+      '</div>';
+    }).join('');
+
+    // 分类统计
+    var catEl = document.getElementById('categoryDetails');
+    if (catEl && d.by_category) {
+      var cats = d.by_category;
+      catEl.innerHTML = Object.keys(cats).map(function(cat) {
+        var info = cats[cat];
+        var calls = info.calls || info.count || 0;
+        var cost = info.cost || 0;
+        return '<div class="detail-row">' +
+          '<div><div class="detail-label">' + _esc(cat) + '</div>' +
+          '<div class="detail-sub">' + calls + ' 次调用</div></div>' +
+          '<div><div class="detail-value">' + (cost > 0 ? '¥' + cost.toFixed(4) : '--') + '</div></div>' +
+        '</div>';
+      }).join('');
+    } else if (catEl) {
+      catEl.innerHTML = '<div style="text-align:center;padding:12px;color:#B090A0;font-size:12px;">暂无分类数据</div>';
+    }
+  }).catch(function(err) {
+    chartEl.innerHTML = '<div style="text-align:center;width:100%;padding:40px 0;color:#F472B6;font-size:13px;">加载失败: ' + _esc(err.message || '未知错误') + '</div>';
+  });
+}
+
+function loadEndpoints() {
+  var el = document.getElementById('endpointDetails');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:#B090A0;font-size:13px;">加载中…</div>';
+
+  var promise;
+  if (currentKeyId === 'all') {
+    // 全部 Key → 用 summary 中的 endpoints 或跳过
+    promise = API.getApiKeyUsageSummary();
+  } else {
+    promise = API.getApiKeyEndpoints(currentKeyId, currentRange);
+  }
+
+  promise.then(function(d) {
+    var endpoints = d.endpoints || d.top_endpoints || [];
+    if (!endpoints.length) {
+      el.innerHTML = '<div style="text-align:center;padding:12px;color:#B090A0;font-size:12px;">暂无端点数据</div>';
+      return;
+    }
+    el.innerHTML = endpoints.slice(0, 10).map(function(ep, i) {
+      var name = ep.endpoint || ep.path || ep.name || '未知';
+      var calls = ep.calls || ep.count || 0;
+      var avgMs = ep.avg_ms || ep.avg_latency || 0;
+      return '<div class="detail-row">' +
+        '<div><div class="detail-label">' + (i + 1) + '. ' + _esc(name) + '</div>' +
+        '<div class="detail-sub">' + calls + ' 次 · 平均 ' + avgMs + 'ms</div></div>' +
+        '<div class="detail-value">' + calls + '</div>' +
+      '</div>';
+    }).join('');
+  }).catch(function() {
+    el.innerHTML = '<div style="text-align:center;padding:12px;color:#B090A0;font-size:12px;">暂无端点数据</div>';
+  });
+}
+
+function _esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+if (API.isLoggedIn()) {
+  loadData();
+}
+</script>
+</body>
+</html>

@@ -102,16 +102,6 @@
   function loadChatBgGlobal() {
     var phone = document.querySelector('.phone');
     if (!phone) return;
-    // 聊天背景只应在聊天页生效，不应全局应用到首页/Bot管理/通知等其他页面。
-    // 修复：切黑色聊天背景后导航到其他页面，其他页面 .phone 被强制黑底
-    // 但无 dark-mode class → 黑底亮色内容 → "无法正常切换"。
-    var isChatPage = /聊天页\.html/.test(location.pathname) || /聊天/.test(document.title || '');
-    if (!isChatPage) {
-      // 非聊天页：用默认背景，不受 chatBg 影响
-      phone.style.background = '';
-      if (!phone.classList.contains('dark-mode')) phone.style.background = '#FFF5F7';
-      return;
-    }
     try {
       var raw = localStorage.getItem(CHAT_BG_KEY);
       if (raw) {
@@ -125,11 +115,9 @@
   }
   loadChatBgGlobal();
 
-  // Background change from other tabs — 仅聊天页响应，其他页面忽略
+  // Background change from other tabs — 全局同步
   window.addEventListener('storage', function(e) {
     if (e.key === CHAT_BG_KEY) {
-      var isChatPage = /聊天页\.html/.test(location.pathname) || /聊天/.test(document.title || '');
-      if (!isChatPage) return;
       var phone = document.querySelector('.phone');
       if (!phone) return;
       try {
@@ -439,5 +427,19 @@
       clearTimeout(timer);
       timer = setTimeout(function() { fn.apply(ctx, args); }, delay);
     };
+  };
+
+  /* === P0-3：原生通知点击跳转钩子 ===
+   * MainActivity.handleNotificationIntent 在通知被点击时调用此函数，
+   * 传入 target_url（如 "通知.html" 或 "聊天页.html"），JS 侧负责跳转。
+   * 放 app.js（全局加载）而非 native.js（通知页未加载 native.js，审计 M3）。
+   */
+  window.handleNotification = function(url) {
+    if (!url) return;
+    // 已在目标页则仅刷新，否则跳转
+    var pageName = url.replace(/\?.*$/, '').replace(/\.html$/, '');
+    if (!new RegExp(pageName + '(\\.html)?$').test(location.pathname)) {
+      location.href = url;
+    }
   };
 })();

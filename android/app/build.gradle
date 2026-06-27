@@ -34,11 +34,13 @@ dependencies {
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    // P0：后台轮询 HTTP 客户端
+    implementation "com.squareup.okhttp3:okhttp:$okhttpVersion"
 }
 
 // ── Copy web assets from prototype directory before building ──
 task copyWebAssets(type: Copy) {
-    from('../../../安卓控制面板UI原型') {
+    from('../../ux-prototypes') {
         include '**/*.html'
         include '**/*.css'
         include '**/*.js'

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<title>通道配置 — UI 原型</title>
+<link rel="stylesheet" href="shared/tokens.css">
+<link rel="stylesheet" href="shared/base.css">
+<link rel="stylesheet" href="shared/components.css">
+<link rel="stylesheet" href="shared/dark-mode.css">
+<link rel="stylesheet" href="shared/effects.css">
+<style>
+/* ===== 通道配置 — 页面专属样式 ===== */
+.scroll-area { padding: 12px 0 8px; }
+
+/* 通道选择标签 */
+.channel-tabs {
+  display: flex; margin: 8px 20px 0; background: rgba(255,255,255,0.4);
+  border-radius: 12px; padding: 3px; gap: 2px;
+}
+.ch-tab {
+  flex: 1; text-align: center; padding: 10px 0; font-size: 14px; font-weight: 700;
+  border-radius: 10px; cursor: pointer; transition: all 0.3s;
+  color: #B090A0; border: none; background: transparent; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.ch-tab.active { background: #fff; color: #F472B6; box-shadow: 0 2px 8px rgba(244,114,182,0.1); }
+.ch-tab svg { width: 18px; height: 18px; }
+
+/* 连接状态条 */
+.conn-bar {
+  margin: 10px 20px 0; padding: 14px 16px; border-radius: 14px;
+  display: flex; align-items: center; gap: 12px;
+  transition: all 0.3s;
+}
+.conn-bar.online { background: rgba(76,175,80,0.08); border: 1.5px solid rgba(76,175,80,0.2); }
+.conn-bar.offline { background: rgba(176,160,192,0.08); border: 1.5px solid rgba(176,160,192,0.2); }
+.conn-bar.error { background: rgba(255,107,107,0.08); border: 1.5px solid rgba(255,107,107,0.2); }
+.conn-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.conn-dot.online { background: #4CAF50; box-shadow: 0 0 6px rgba(76,175,80,0.4); }
+.conn-dot.offline { background: #C0A0B0; }
+.conn-dot.error { background: #FF6B6B; }
+.conn-info { flex: 1; }
+.conn-label { font-size: 14px; font-weight: 700; }
+.conn-sub { font-size: 11px; color: #B090A0; margin-top: 2px; }
+.conn-action {
+  padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 700;
+  border: none; cursor: pointer; font-family: inherit; transition: all 0.2s;
+}
+.conn-action.connect { background: #4CAF50; color: #fff; }
+.conn-action.disconnect { background: rgba(255,107,107,0.1); color: #FF6B6B; }
+.conn-action:active { transform: scale(0.95); }
+
+/* 设置分组 */
+.settings-group {
+  margin: 14px 20px 0; background: rgba(255,255,255,0.7); backdrop-filter: blur(8px);
+  border-radius: 18px; border: 1.5px solid rgba(255,255,255,0.7);
+  box-shadow: 0 3px 12px rgba(100,100,120,0.05); overflow: hidden;
+}
+.sg-header {
+  padding: 14px 16px 8px; font-size: 12px; font-weight: 700; color: #6A5060;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.sg-item {
+  display: flex; align-items: center; padding: 14px 16px;
+  border-top: 1px solid rgba(0,0,0,0.03);
+}
+.sg-item:first-child { border-top: none; }
+.sg-icon {
+  width: 32px; height: 32px; border-radius: 10px; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0; margin-right: 12px;
+}
+.sg-icon.pink { background: rgba(244,114,182,0.08); color: #F472B6; }
+.sg-icon.purple { background: rgba(196,181,253,0.12); color: #C4B5FD; }
+.sg-icon.orange { background: rgba(255,179,71,0.1); color: #FFB347; }
+.sg-icon.green { background: rgba(76,175,80,0.08); color: #4CAF50; }
+.sg-icon.blue { background: rgba(96,165,250,0.1); color: #60A5FA; }
+.sg-icon svg { width: 16px; height: 16px; }
+.sg-text { flex: 1; }
+.sg-label { font-size: 14px; font-weight: 600; color: #3A2030; }
+.sg-desc { font-size: 11px; color: #B090A0; margin-top: 2px; }
+
+/* 输入框 */
+.sg-input {
+  padding: 8px 12px; border-radius: 10px; border: 1.5px solid rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.8); font-size: 13px; font-family: inherit;
+  color: #3A2030; width: 100%; outline: none; transition: all 0.2s;
+}
+.sg-input:focus { border-color: #F472B6; box-shadow: 0 0 0 3px rgba(244,114,182,0.06); }
+textarea.sg-input { resize: none; height: 60px; }
+
+/* 保存按钮 */
+.save-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(0,0,0,0.04);
+  display: flex; gap: 10px;
+}
+.save-bar .btn-save {
+  flex: 1; padding: 14px; border-radius: 14px; border: none; cursor: pointer;
+  font-size: 15px; font-weight: 700; font-family: inherit;
+  background: linear-gradient(135deg, #F472B6, #FF8095); color: #fff;
+  box-shadow: 0 4px 14px rgba(244,114,182,0.25); transition: all 0.2s;
+}
+.save-bar .btn-save:active { transform: scale(0.97); }
+.save-bar .btn-cancel {
+  padding: 14px 20px; border-radius: 14px; border: none; cursor: pointer;
+  font-size: 15px; font-weight: 600; font-family: inherit;
+  background: rgba(0,0,0,0.04); color: #B090A0; transition: all 0.2s;
+}
+
+/* Dark mode */
+.phone.dark-mode .channel-tabs { background: rgba(255,255,255,0.04); }
+.phone.dark-mode .ch-tab.active { background: #2A2A3E; color: #F9A8D4; }
+.phone.dark-mode .conn-bar.online { background: rgba(76,175,80,0.06); border-color: rgba(76,175,80,0.15); }
+.phone.dark-mode .conn-bar.offline { background: rgba(176,160,192,0.06); border-color: rgba(176,160,192,0.15); }
+.phone.dark-mode .conn-label { color: #E0D8E8; }
+.phone.dark-mode .conn-sub { color: #8078A0; }
+.phone.dark-mode .settings-group { background: #16213E; border-color: rgba(255,255,255,0.06); }
+.phone.dark-mode .sg-header { color: #B0A0C0; }
+.phone.dark-mode .sg-label { color: #E0D8E8; }
+.phone.dark-mode .sg-desc { color: #8078A0; }
+.phone.dark-mode .sg-item { border-top-color: rgba(255,255,255,0.04); }
+.phone.dark-mode .sg-input { background: #1A1A3E; border-color: rgba(255,255,255,0.08); color: #E0D8E8; }
+.phone.dark-mode .save-bar { background: rgba(22,33,62,0.95); border-top-color: rgba(255,255,255,0.04); }
+.phone.dark-mode .save-bar .btn-cancel { background: rgba(255,255,255,0.04); color: #9088A0; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="title-bar">
+    <a class="back" href="javascript:history.back()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <span class="title">通道配置</span>
+  </div>
+
+  <div class="scroll-area">
+    <!-- 通道切换 -->
+    <div class="channel-tabs">
+      <button class="ch-tab active" onclick="switchChannel('qq', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        QQ
+      </button>
+      <button class="ch-tab" onclick="switchChannel('wechat', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
+        微信
+      </button>
+    </div>
+
+    <!-- 连接状态 -->
+    <div class="conn-bar offline" id="connBar">
+      <span class="conn-dot offline" id="connDot"></span>
+      <div class="conn-info">
+        <div class="conn-label" id="connLabel">未连接</div>
+        <div class="conn-sub" id="connSub">通道尚未激活</div>
+      </div>
+      <button class="conn-action connect" id="connBtn" onclick="toggleConnection()">连接</button>
+    </div>
+
+    <!-- QQ 设置面板 -->
+    <div id="qqPanel">
+      <div class="settings-group">
+        <div class="sg-header">消息设置</div>
+        <div class="sg-item">
+          <div class="sg-icon pink">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4h16v13H8l-4 4v-4H4z"/></svg>
+          </div>
+          <div class="sg-text">
+            <div class="sg-label">自动回复</div>
+            <div class="sg-desc">收到消息后自动回复</div>
+          </div>
+          <label class="toggle-switch" onclick="event.stopPropagation()">
+            <input type="checkbox" checked id="cfgAutoReply" onchange="markDirty()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="sg-item">
+          <div class="sg-icon purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          </div>
+          <div class="sg-text">
+            <div class="sg-label">群聊响应</div>
+            <div class="sg-desc">在群聊中也响应消息</div>
+          </div>
+          <label class="toggle-switch" onclick="event.stopPropagation()">
+            <input type="checkbox" id="cfgGroupResponse" onchange="markDirty()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="sg-item">
+          <div class="sg-icon orange">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+          </div>
+          <div class="sg-text">
+            <div class="sg-label">消息通知</div>
+            <div class="sg-desc">新消息推送到 App</div>
+          </div>
+          <label class="toggle-switch" onclick="event.stopPropagation()">
+            <input type="checkbox" checked id="cfgMsgNotify" onchange="markDirty()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="sg-header">高级设置</div>
+        <div class="sg-item" style="flex-direction:column;align-items:stretch;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="sg-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="sg-text">
+              <div class="sg-label">回复延迟</div>
+              <div class="sg-desc">模拟打字延迟（秒）</div>
+            </div>
+          </div>
+          <input class="sg-input" type="number" id="cfgReplyDelay" value="1" min="0" max="30" style="margin-top:8px;" onchange="markDirty()">
+        </div>
+        <div class="sg-item" style="flex-direction:column;align-items:stretch;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="sg-icon blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
+            <div class="sg-text">
+              <div class="sg-label">自动回复模板</div>
+              <div class="sg-desc">自定义离线时的自动回复内容</div>
+            </div>
+          </div>
+          <textarea class="sg-input" id="cfgAutoTemplate" placeholder="你好，我现在不在，稍后回复你~" style="margin-top:8px;" oninput="markDirty()"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 微信 设置面板 -->
+    <div id="wxPanel" style="display:none;">
+      <div class="settings-group">
+        <div class="sg-header">微信绑定</div>
+        <div class="sg-item" style="flex-direction:column;align-items:stretch;text-align:center;padding:24px 16px;">
+          <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#C4B5FD,#9B7ED8);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 6px 18px rgba(124,92,191,0.2);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" style="width:28px;height:28px;"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
+          </div>
+          <div style="font-size:15px;font-weight:700;color:#3A2030;margin-bottom:4px;">绑定微信通道</div>
+          <div style="font-size:12px;color:#B090A0;margin-bottom:16px;line-height:1.5;">绑定后 Bot 可在微信中接收和回复消息<br>支持个人微信与企业微信</div>
+          <button class="conn-action connect" onclick="bindWechat()" style="padding:12px 32px;font-size:14px;border-radius:12px;">立即绑定</button>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="sg-header">同步设置</div>
+        <div class="sg-item">
+          <div class="sg-icon pink">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4h16v13H8l-4 4v-4H4z"/></svg>
+          </div>
+          <div class="sg-text">
+            <div class="sg-label">消息同步</div>
+            <div class="sg-desc">同步微信消息到 Bot</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="cfgWxSync">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="sg-item">
+          <div class="sg-icon purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="5"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          </div>
+          <div class="sg-text">
+            <div class="sg-label">群聊同步</div>
+            <div class="sg-desc">同步微信群聊消息</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="cfgWxGroup">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:80px;"></div>
+  </div>
+
+  <!-- 底部保存栏 -->
+  <div class="save-bar" id="saveBar" style="display:none;">
+    <button class="btn-cancel" onclick="cancelChanges()">取消</button>
+    <button class="btn-save" onclick="saveSettings()">保存配置</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="shared/config.js"></script>
+<script src="shared/api.js"></script>
+<script src="shared/app.js"></script>
+<script>
+var currentChannel = 'qq';
+var isDirty = false;
+
+function switchChannel(ch, btn) {
+  currentChannel = ch;
+  document.querySelectorAll('.ch-tab').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  document.getElementById('qqPanel').style.display = ch === 'qq' ? '' : 'none';
+  document.getElementById('wxPanel').style.display = ch === 'wechat' ? '' : 'none';
+  loadChannelStatus(ch);
+}
+
+function markDirty() {
+  isDirty = true;
+  document.getElementById('saveBar').style.display = 'flex';
+}
+
+function cancelChanges() {
+  isDirty = false;
+  document.getElementById('saveBar').style.display = 'none';
+  loadChannelSettings(currentChannel);
+}
+
+function loadChannelStatus(ch) {
+  var bar = document.getElementById('connBar');
+  var dot = document.getElementById('connDot');
+  var label = document.getElementById('connLabel');
+  var sub = document.getElementById('connSub');
+  var btn = document.getElementById('connBtn');
+
+  if (ch === 'qq') {
+    API.getQQStatus().then(function(qq) {
+      if (qq.connected) {
+        bar.className = 'conn-bar online';
+        dot.className = 'conn-dot online';
+        label.textContent = '已连接';
+        sub.textContent = 'QQ号: ' + (qq.qq_number || '--') + ' · 运行正常';
+        btn.textContent = '断开';
+        btn.className = 'conn-action disconnect';
+      } else {
+        bar.className = 'conn-bar offline';
+        dot.className = 'conn-dot offline';
+        label.textContent = '未连接';
+        sub.textContent = 'QQ 通道未激活';
+        btn.textContent = '连接';
+        btn.className = 'conn-action connect';
+      }
+    }).catch(function(err) {
+      bar.className = 'conn-bar error';
+      dot.className = 'conn-dot error';
+      label.textContent = '连接异常';
+      sub.textContent = '服务器错误，请稍后重试';
+      btn.textContent = '重试';
+      btn.className = 'conn-action connect';
+    });
+  } else {
+    API.getWechatStatus().then(function(wx) {
+      if (wx.bound) {
+        bar.className = 'conn-bar online';
+        dot.className = 'conn-dot online';
+        label.textContent = '已绑定';
+        sub.textContent = '微信通道运行正常';
+        btn.textContent = '解绑';
+        btn.className = 'conn-action disconnect';
+      } else {
+        bar.className = 'conn-bar offline';
+        dot.className = 'conn-dot offline';
+        label.textContent = '未绑定';
+        sub.textContent = '微信通道未激活';
+        btn.textContent = '绑定';
+        btn.className = 'conn-action connect';
+      }
+    }).catch(function(err) {
+      bar.className = 'conn-bar error';
+      dot.className = 'conn-dot error';
+      label.textContent = '服务异常';
+      sub.textContent = '服务器错误，请稍后重试';
+      btn.textContent = '重试';
+      btn.className = 'conn-action connect';
+    });
+  }
+}
+
+function loadChannelSettings(ch) {
+  if (ch === 'qq') {
+    API.getQQSettings().then(function(s) {
+      var el;
+      el = document.getElementById('cfgAutoReply'); if (el && s.auto_reply !== undefined) el.checked = s.auto_reply;
+      el = document.getElementById('cfgGroupResponse'); if (el && s.group_response !== undefined) el.checked = s.group_response;
+      el = document.getElementById('cfgMsgNotify'); if (el && s.message_notify !== undefined) el.checked = s.message_notify;
+      el = document.getElementById('cfgReplyDelay'); if (el && s.reply_delay !== undefined) el.value = s.reply_delay;
+      el = document.getElementById('cfgAutoTemplate'); if (el && s.auto_template !== undefined) el.value = s.auto_template;
+      isDirty = false;
+      document.getElementById('saveBar').style.display = 'none';
+    }).catch(function(err) {
+      console.warn('[cfg] QQ settings load failed:', err.message);
+    });
+  }
+}
+
+function saveSettings() {
+  if (currentChannel === 'qq') {
+    var data = {
+      auto_reply: document.getElementById('cfgAutoReply').checked,
+      group_response: document.getElementById('cfgGroupResponse').checked,
+      message_notify: document.getElementById('cfgMsgNotify').checked,
+      reply_delay: parseInt(document.getElementById('cfgReplyDelay').value) || 1,
+      auto_template: document.getElementById('cfgAutoTemplate').value.trim()
+    };
+    showToast('保存中…');
+    API.updateQQSettings(data).then(function() {
+      showToast('QQ 通道配置已保存 ✓');
+      isDirty = false;
+      document.getElementById('saveBar').style.display = 'none';
+    }).catch(function(err) {
+      showToast('保存失败: ' + (err.message || '未知错误'), 'error');
+    });
+  } else {
+    showToast('微信通道设置将在绑定后生效');
+    isDirty = false;
+    document.getElementById('saveBar').style.display = 'none';
+  }
+}
+
+function toggleConnection() {
+  if (currentChannel === 'qq') {
+    var btn = document.getElementById('connBtn');
+    if (btn.textContent === '断开') {
+      if (!confirm('确定断开 QQ 通道？Bot 将停止响应 QQ 消息。')) return;
+      btn.disabled = true; btn.textContent = '断开中…';
+      API.disconnectQQ().then(function() {
+        showToast('QQ 通道已断开');
+        loadChannelStatus('qq');
+        btn.disabled = false;
+      }).catch(function(err) {
+        showToast('断开失败: ' + (err.message || '未知错误'), 'error');
+        btn.disabled = false; btn.textContent = '断开';
+      });
+    } else {
+      showToast('请前往 QQ通道.html 页面进行连接配置');
+    }
+  } else {
+    var btn = document.getElementById('connBtn');
+    if (btn.textContent === '解绑') {
+      if (!confirm('确定解绑微信通道？')) return;
+      API.listBots().then(function(r) {
+        var bots = r.bots || [];
+        if (!bots.length) { showToast('无可用 Bot', 'error'); return; }
+        API.disconnectWechat(bots[0].id).then(function() {
+          showToast('微信通道已解绑');
+          loadChannelStatus('wechat');
+        }).catch(function(err) {
+          showToast('解绑失败: ' + (err.message || '未知错误'), 'error');
+        });
+      });
+    } else {
+      bindWechat();
+    }
+  }
+}
+
+function bindWechat() {
+  API.listBots().then(function(r) {
+    var bots = r.bots || [];
+    if (!bots.length) { showToast('请先创建一个 Bot', 'error'); return; }
+    var botId = bots[0].id;
+    showToast('绑定中…');
+    API.bindWechat(botId).then(function() {
+      showToast('微信通道绑定成功 ✓');
+      loadChannelStatus('wechat');
+    }).catch(function(err) {
+      showToast('绑定失败: ' + (err.message || '未知错误'), 'error');
+    });
+  });
+}
+
+// 初始化
+if (API.isLoggedIn()) {
+  loadChannelStatus('qq');
+  loadChannelSettings('qq');
+}
+</script>
+</body>
+</html>

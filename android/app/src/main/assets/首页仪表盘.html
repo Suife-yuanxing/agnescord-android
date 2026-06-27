@@ -359,6 +359,16 @@
 
   function _e(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+  // 补全服务器URL前缀
+  function _resolveUrl(url) {
+    if (!url) return '';
+    if (url.indexOf('http') === 0 || url.indexOf('data:') === 0) return url;
+    var base = (window.APP_CONFIG && window.APP_CONFIG.server_base) || '';
+    if (base && url.charAt(0) === '/') return base + url;
+    if (base) return base + '/' + url;
+    return url;
+  }
+
   // ── 加载仪表盘数据（未登录则显示空态）──
   API.getDashboard().then(function(d) {
     // 问候语 + 用户名
@@ -367,19 +377,27 @@
     if (greetEl) greetEl.textContent = d.greeting || '欢迎回来';
     if (nameEl) nameEl.textContent = (d.user && d.user.nickname) || '用户';
 
-    // Bot 卡片 — 动态填充骨架屏
+    // Bot 卡片 — 动态填充 + 基于 is_active 显示真实状态
     var botCard = document.getElementById('dashboardBotCard');
     if (d.bots && d.bots.length > 0) {
       var b = d.bots[0];
-      var avatarSrc = b.avatar_url || 'shared/agnes-cat.png';
+      var avatarSrc = b.avatar_url ? _resolveUrl(b.avatar_url) : 'shared/agnes-cat.png';
+      var fallbackSrc = 'shared/agnes-cat.png';
+      var personaLabels = { tsundere: '傲娇', gentle: '温柔', sarcastic: '毒舌', energetic: '元气', emotionless: '三无', sly: '腹黑' };
+      var personaText = personaLabels[b.personality] || b.personality || '';
+      var isBotActive = b.is_active !== false;
+      var statusLabel = isBotActive ? '运行中' : '已停用';
+      var statusColor = isBotActive ? '#4CAF50' : '#B0A0B0';
+      console.log('[Dashboard] bot=' + b.name + ' avatar_url=' + JSON.stringify(b.avatar_url) + ' is_active=' + b.is_active);
       botCard.innerHTML = '<div class="row">' +
         '<div class="bot-info">' +
-          '<div class="bot-avatar"><div class="img-cat avatar img-md"><img src="' + avatarSrc + '" alt="猫娘"></div></div>' +
+          '<div class="bot-avatar"><div class="img-cat avatar img-md"><img src="' + avatarSrc + '" alt="Bot" onerror="this.onerror=null;this.src=\'' + fallbackSrc + '\'">' +
+          '</div></div>' +
           '<div><div class="bot-name">' + _e(b.name || 'Bot') + '</div>' +
-          '<div class="bot-persona">' + _e(b.personality || '') + ' · ' + (b.is_active ? '活跃' : '离线') + '</div>' +
-          '<div class="bot-status">' + (b.is_active ? '<span style="color:#4CAF50;">●</span> 在线' : '<span style="color:#C0A0B0;">●</span> 离线') + '</div></div>' +
+          '<div class="bot-persona">' + _e(personaText) + (isBotActive ? ' · 活跃' : '') + '</div>' +
+          '<div class="bot-status" id="dashBotStatus"><span style="color:' + statusColor + ';">●</span> ' + statusLabel + '</div></div>' +
         '</div>' +
-        '<button class="switch-btn" onclick="event.stopPropagation();location.href=\'我的Bot.html\'">切换</button>' +
+        '<button class="switch-btn" onclick="event.stopPropagation();location.href=\'我的Bot.html\'">\u5207\u6362</button>' +
         '</div>';
       API.setCurrentBotId(b.id);
       botCard.onclick = function() { location.href = '聊天页.html?bot_id=' + b.id; };
@@ -452,11 +470,12 @@
     animateStats();
   }).catch(function(err) {
     console.error('Dashboard load error:', err);
-    // API 失败 → 显示未登录状态
+    var errMsg = err.message || '未知错误';
+    // API 失败 → 显示具体错误信息
     var botCard = document.getElementById('dashboardBotCard');
     if (botCard) {
-      botCard.innerHTML = '<div class="row"><div class="bot-info"><div style="font-size:14px;opacity:0.7;">请先登录查看 Bot</div></div></div>';
-      botCard.onclick = function() { location.href = '登录页.html'; };
+      botCard.innerHTML = '<div class="row"><div class="bot-info"><div style="font-size:13px;opacity:0.8;line-height:1.6;">加载失败: ' + _e(errMsg) + '<br><span style="font-size:11px;color:#B090A0;">服务器: ' + _e((window.APP_CONFIG && window.APP_CONFIG.server_base) || '未配置') + '</span></div></div></div>';
+      botCard.onclick = function() { location.reload(); };
     }
   });
 
