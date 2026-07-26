@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="shared/tokens.css">
 <link rel="stylesheet" href="shared/base.css">
 <link rel="stylesheet" href="shared/components.css">
-<link rel="stylesheet" href="shared/dark-mode.css">
 <link rel="stylesheet" href="shared/effects.css">
 <style>
 /* ===== API Key 管理 — 页面专属样式 ===== */
@@ -173,10 +172,14 @@ body { background-attachment: fixed; overflow-x: hidden; }
 .phone.dark-mode .perm-check:hover { background: rgba(255,255,255,0.05); }
 .phone.dark-mode .perm-name { color: #D0C8E0; }
 .phone.dark-mode .perm-cn { color: #8078A0; }
+
+/* Phase 2: Security tab dark mode */
+.phone.dark-mode #securityTab .key-card { background: #16213E; border-color: rgba(255,255,255,0.06); }
+.phone.dark-mode #securityEvents { color: #9088A0; }
 </style>
 </head>
 <body>
-<div class="phone">
+<div class="phone" data-emotion="1">
   <div class="title-bar">
     <span class="title">API Key</span>
     <a class="add-btn" href="APIKey新建.html" title="新建 Key">
@@ -195,6 +198,7 @@ body { background-attachment: fixed; overflow-x: hidden; }
   <div class="tab-row">
     <button class="tab-btn active" onclick="switchTab('keys', this)">我的 Key</button>
     <a class="tab-btn" href="APIKey用量明细.html" style="text-decoration:none;">用量明细 ↗</a>
+    <button class="tab-btn" onclick="switchTab('security', this)">安全</button>
   </div>
 
   <div class="scroll-area" id="scrollArea">
@@ -206,7 +210,36 @@ body { background-attachment: fixed; overflow-x: hidden; }
 
     <div id="usageTab" style="display:none;">
       <div class="key-card" style="text-align:center;padding:32px;color:#B090A0;">
-        点击“用量明细”加载
+        点击"用量明细"加载
+      </div>
+    </div>
+  
+    <!-- Phase 2: 安全设置 Tab -->
+    <div id="securityTab" style="display:none;">
+      <div class="key-card">
+        <div style="font-size:14px;font-weight:700;color:#3A2030;margin-bottom:14px;">🔒 安全概览</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.04);">
+            <div><div style="font-size:13px;font-weight:600;color:#3A2030;">速率限制</div><div style="font-size:11px;color:#B090A0;margin-top:2px;">每个 Key 每分钟最多请求数</div></div>
+            <span style="font-size:13px;font-weight:700;color:#F472B6;">60/min</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.04);">
+            <div><div style="font-size:13px;font-weight:600;color:#3A2030;">IP 白名单</div><div style="font-size:11px;color:#B090A0;margin-top:2px;">限制 Key 只能从指定 IP 调用</div></div>
+            <span style="font-size:12px;color:#4CAF50;font-weight:600;">未启用</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.04);">
+            <div><div style="font-size:13px;font-weight:600;color:#3A2030;">Key 轮换提醒</div><div style="font-size:11px;color:#B090A0;margin-top:2px;">定期轮换以提高安全性</div></div>
+            <span style="font-size:12px;color:#FFB347;font-weight:600;">建议90天</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
+            <div><div style="font-size:13px;font-weight:600;color:#3A2030;">异常检测</div><div style="font-size:11px;color:#B090A0;margin-top:2px;">自动检测异常调用模式</div></div>
+            <span style="font-size:12px;color:#4CAF50;font-weight:600;">● 已开启</span>
+          </div>
+        </div>
+      </div>
+      <div class="key-card" style="margin-top:10px;">
+        <div style="font-size:14px;font-weight:700;color:#3A2030;margin-bottom:10px;">📋 最近安全事件</div>
+        <div id="securityEvents" style="font-size:12px;color:#B090A0;text-align:center;padding:20px 0;">暂无异常事件</div>
       </div>
     </div>
   </div>
@@ -243,6 +276,7 @@ body { background-attachment: fixed; overflow-x: hidden; }
   </div>
   <div class="toast" id="toast" style="top:120px;"></div>
 </div>
+<script src="shared/native.js"></script>
 <script src="shared/config.js"></script>
 <script src="shared/api.js"></script>
 <script src="shared/app.js"></script>
@@ -324,7 +358,8 @@ body { background-attachment: fixed; overflow-x: hidden; }
     return Math.floor(diff/86400) + ' 天前';
   }
 
-  function _esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  // [安全] 统一使用全局 escapeHtml
+  function _esc(s) { return escapeHtml(s); }
 
   // ---- 复制 ----
   window.copyKey = function(text, el) {
@@ -381,6 +416,8 @@ body { background-attachment: fixed; overflow-x: hidden; }
     btn.classList.add('active');
     document.getElementById('keysTab').style.display = tab === 'keys' ? '' : 'none';
     document.getElementById('usageTab').style.display = tab === 'usage' ? '' : 'none';
+    var secTab = document.getElementById('securityTab');
+    if (secTab) secTab.style.display = tab === 'security' ? '' : 'none';
     // B4：切到用量明细 tab 时调 API 加载真实数据（防御性检查）
     if (tab === 'usage' && typeof loadUsageDetail === 'function') loadUsageDetail();
   };
@@ -441,6 +478,8 @@ body { background-attachment: fixed; overflow-x: hidden; }
         if (btn) btn.classList.add('active');
         document.getElementById('keysTab').style.display = tab === 'keys' ? '' : 'none';
         document.getElementById('usageTab').style.display = tab === 'usage' ? '' : 'none';
+        var secTab2 = document.getElementById('securityTab');
+        if (secTab2) secTab2.style.display = tab === 'security' ? '' : 'none';
       };
     }
     if (typeof window.toggleNewForm !== 'function') {

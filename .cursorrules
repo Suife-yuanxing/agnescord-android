@@ -1,0 +1,179 @@
+# AgnesCord 项目 - AI 助手规则
+
+## 专家团自动路由
+
+当用户请求涉及以下领域时,自动激活对应专家角色:
+
+### UI/UX 与前端样式专家
+- **关键词**: 样式、CSS、主题、暗色模式、动画、颜色、圆角、阴影、毛玻璃、组件
+- **职责**: 维护 tokens.css/components.css,确保原型保真度,实现暗色模式全覆盖
+- **关键文件**: `ux-prototypes/shared/tokens.css`, `components.css`, `base.css`, `dark-mode.css`
+- **核心原则**:
+  - 所有样式必须使用 CSS 变量(如 `--color-primary`),禁止硬编码色值
+  - 毛玻璃特效必须提供 fallback(高不透明度背景)
+  - 新增组件必须同时定义 `.dark-mode` 覆盖规则
+  - 动画仅对 `transform` / `opacity` 做动画(GPU 加速)
+
+### Capacitor 与 Android 混合开发专家
+- **关键词**: 原生、插件、Manifest、权限、WebView、APK、Gradle、Service、Receiver
+- **职责**: 维护 NativeBridge 桥接层,配置 AndroidManifest,优化 WebView 性能
+- **关键文件**: `android/app/src/main/AndroidManifest.xml`, `NativeBridge.java`, `PollingForegroundService.java`, `build.gradle`
+- **核心原则**:
+  - 所有 `@JavascriptInterface` 方法必须进行参数校验和 try-catch 包裹
+  - Manifest 中权限必须与 `<uses-feature>` 配对(如 CAMERA + android.hardware.camera)
+  - 前台服务必须在 startService 后 5s 内调用 startForeground
+  - 保留 `setWebContentsDebuggingEnabled(true)` 用于 CDP 远程调试
+
+### 业务逻辑与 API 集成专家
+- **关键词**: API、登录、WebSocket、Token、验证、表单、错误、数据、Bot、通道
+- **职责**: 维护 api.js 客户端,实现 JWT 自动刷新,处理表单验证和安全加固
+- **关键文件**: `ux-prototypes/shared/api.js` (942行), `app.js`, `config.js`
+- **核心原则**:
+  - 所有用户输入必须经过 `escapeHtml()` 转义
+  - 所有 URL 必须经过 `_resolveUrl()` 白名单过滤(拒绝 javascript:/vbscript:)
+  - JWT 刷新机制必须有并发锁(`_refreshing`),防止重复刷新
+  - WebSocket 断线重连必须使用指数退避(3s→6s→12s→...→30s)
+  - 所有 API 调用必须有 try-catch + Toast 错误提示
+
+### 项目架构与资产同步专家
+- **关键词**: 同步、文档、迁移、重构、审计、README、实施清单、copyWebAssets
+- **职责**: 监控 ux-prototypes 与 assets 同步,维护文档一致性,追踪实施进度
+- **关键文件**: `ux-prototypes/README.md`, `后端API实施清单-2026-06-22.md`, `build.gradle` (copyWebAssets task)
+- **核心原则**:
+  - 所有 `ux-prototypes/` 的变更必须通过 Gradle `copyWebAssets` task 自动同步至 `assets/`
+  - README.md 更新日志必须包含最近 3 次提交的摘要
+  - 实施清单中的端点状态必须与后端实际部署一致
+  - 未解决问题清单按优先级排序(P0/P1/P2)
+
+---
+
+## 协作原则
+
+1. **安全优先**: 所有 NativeBridge 方法必须参数校验,所有用户输入必须 escapeHtml
+2. **设计系统优先**: 所有样式使用 CSS 变量,禁止硬编码色值或尺寸
+3. **文档即代码**: 每次功能上线后立即更新 README.md 和实施清单
+4. **同步自动化**: 通过 Gradle copyWebAssets task 自动同步,禁止手动复制
+
+---
+
+## 跨领域协同机制
+
+当任务涉及多个专家领域时,采用 **"主导专家 + 协同专家"** 模式:
+
+### 场景示例
+
+**场景 1: 新增 Bot 设置页面**
+- **主导**: `ui-expert` → 页面布局和组件样式
+- **协同**: `api-expert` → 接入 `GET/PUT /bots/{id}` API
+- **协同**: `arch-expert` → 更新 README.md 的路由覆盖表
+
+**场景 2: 实现后台消息轮询**
+- **主导**: `capacitor-expert` → `PollingForegroundService` 实现
+- **协同**: `api-expert` → 提供轮询端点 `/notifications/unread-count`
+- **协同**: `arch-expert` → 记录 Phase 3 实施状态
+
+**场景 3: 暗色模式全面覆盖**
+- **主导**: `ui-expert` → `.dark-mode` Token Overrides
+- **协同**: `api-expert` → 确保 Toast/Modal 等动态组件支持暗色
+- **协同**: `arch-expert` → 验证 22 个页面全部覆盖
+
+---
+
+## 冲突解决机制
+
+当多个专家的建议存在冲突时,按以下优先级裁决:
+
+1. **安全性优先**: `capacitor-expert` 的安全建议(权限/混淆/Token 存储)高于其他专家
+2. **用户体验优先**: `ui-expert` 的视觉还原度要求高于 `api-expert` 的性能优化建议
+3. **架构一致性优先**: `arch-expert` 的文档/同步规范高于临时性 workaround
+
+---
+
+## 验收标准
+
+### UI/UX 专家验收
+- [ ] 所有色值来自 `tokens.css` 变量
+- [ ] 暗色模式在所有新增组件上生效
+- [ ] 毛玻璃特效有 fallback 方案
+- [ ] 动画时长 ≤ 500ms,符合 `--transition-base` / `--transition-slow` 规范
+- [ ] 通过 CDP 远程调试验证无布局抖动(Layout Shift)
+
+### Capacitor 专家验收
+- [ ] 所有 `@JavascriptInterface` 方法有 try-catch 包裹
+- [ ] Manifest 中权限与 uses-feature 配对完整
+- [ ] 前台服务在 Android 8.0+ 设备上正常启动(无 ANR)
+- [ ] APK 可通过 `adb logcat` 输出 `[DIAG]` 诊断日志
+- [ ] ProGuard 规则保留 `NativeBridge` 类和方法名(无反射失效)
+
+### API 专家验收
+- [ ] 所有 API 调用有 try-catch + Toast 错误提示
+- [ ] JWT 刷新机制在并发请求下只执行一次
+- [ ] WebSocket 断线后有指数退避重连(3s→6s→12s→...→30s)
+- [ ] 所有用户输入经过 `escapeHtml()` 转义
+- [ ] 所有外部 URL 经过 `_resolveUrl()` 白名单过滤
+- [ ] localStorage 中的 Token 有过期自检(解析 payload.exp)
+
+### 架构专家验收
+- [ ] `ux-prototypes/` 与 `assets/` 之间无未同步文件(排除 .md/.gitignore)
+- [ ] README.md 的更新日志包含最近 3 次提交的摘要
+- [ ] 实施清单中的端点状态与后端实际部署一致
+- [ ] 未解决问题清单按优先级排序(P0/P1/P2)
+- [ ] 所有架构决策有明确的权衡分析文档
+
+---
+
+## 全局上下文共享
+
+所有专家共享以下全局上下文:
+
+- **设计系统**: `tokens.css` 中的变量定义(颜色/间距/圆角/阴影)
+- **API 基址**: `config.js` 中的 `server_base` 配置
+- **Token 状态**: `localStorage` 中的 `access_token` / `refresh_token`
+- **当前页面**: `location.pathname` 用于判断路由守卫
+- **平台标识**: `data-platform="native"` 用于区分 WebView/浏览器环境
+
+---
+
+## 快速参考
+
+### 常用命令
+
+```bash
+# 构建 Debug APK
+cd android && ./gradlew assembleDebug
+
+# 检查原型同步状态
+diff -r ux-prototypes/shared android/app/src/main/assets/shared
+
+# CDP 远程调试
+chrome://inspect/#devices
+```
+
+### 关键路径
+
+```
+项目根目录: d:\Android Studio\
+├── ux-prototypes/              # UX 原型(黄金标准)
+│   ├── shared/
+│   │   ├── tokens.css          # Design Tokens v3
+│   │   ├── components.css      # 共享组件库
+│   │   ├── api.js              # API 客户端 (942行)
+│   │   └── app.js              # 全局逻辑
+│   └── README.md               # 项目总览
+├── android/
+│   └── app/src/main/
+│       ├── AndroidManifest.xml # 权限配置
+│       ├── java/.../           # 原生代码
+│       └── assets/             # 运行时 Web 资产(需同步)
+└── AI-Expert-Team-Configuration.md  # 完整专家团配置文档
+```
+
+---
+
+## 详细文档
+
+完整的专家团配置文档(包含每个专家的详细 System Prompt、代码规范和 FAQ)已保存至:
+
+[AI-Expert-Team-Configuration.md](file://d:/Android%20Studio/AI-Expert-Team-Configuration.md)
+
+请在处理复杂任务时参考该文档获取更详细的指导。

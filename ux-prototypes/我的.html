@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="shared/base.css">
 <link rel="stylesheet" href="shared/components.css">
 <link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/dark-mode.css">
 <link rel="stylesheet" href="shared/effects.css">
 <script src="shared/native.js"></script>
 <script src="shared/config.js"></script>
@@ -182,7 +181,7 @@
 </style>
 </head>
 <body>
-<div class="phone" id="phoneFrame">
+<div class="phone" id="phoneFrame" data-emotion="4">
   <div class="toast" id="toast"></div>
   <!-- 标题栏 -->
   <div class="title-bar">
@@ -766,15 +765,7 @@ if (versionEl) {
 updateAdminVisibility();
 
 // ── 加载用户数据 ──
-// 补全服务器URL前缀
-function _resolveUrl(url) {
-  if (!url) return '';
-  if (url.indexOf('http') === 0 || url.indexOf('data:') === 0) return url;
-  var base = (window.APP_CONFIG && window.APP_CONFIG.server_base) || '';
-  if (base && url.charAt(0) === '/') return base + url;
-  if (base) return base + '/' + url;
-  return url;
-}
+// [安全] _resolveUrl 已由 app.js 全局提供（含协议白名单过滤）
 
 if (API.isLoggedIn()) {
   API.getProfile().then(function(user) {
@@ -786,17 +777,16 @@ if (API.isLoggedIn()) {
     // 头像回显 — 补全服务器URL前缀 + onerror回退
     if (user.avatar_url) {
       var fullUrl = _resolveUrl(user.avatar_url);
-      console.log('[Profile] avatar_url=' + JSON.stringify(user.avatar_url) + ' resolved=' + fullUrl);
       var avWrap = document.getElementById('accountAvatar');
       if (avWrap) {
-        avWrap.innerHTML = '<img src="' + fullUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.onerror=null;this.src=\'shared/agnes-cat.png\'">';
+        // [安全] 用 createElement 安全设置图片 src
+        avWrap.innerHTML = '';
+        var img = _safeCreateImg(fullUrl, '头像', 'shared/agnes-cat.png');
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+        avWrap.appendChild(img);
       }
-    } else {
-      console.log('[Profile] avatar_url is empty/null for user:', user.nickname);
     }
-  }).catch(function(err) {
-    console.error('[Profile] load failed:', err.message || err);
-  });
+  }).catch(function() {});
   // 加载设置
   API.getUserSettings().then(function(s) {
     if (s.theme && s.theme !== 'light') setTheme(s.theme);

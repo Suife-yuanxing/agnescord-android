@@ -375,8 +375,13 @@
 
         // Animate capsule — navigation fires as callback when compression completes
         var self = this;
+        var viewPath = this.getAttribute('data-view');
         animateCapsule(this, function() {
-          window.location.href = href;
+          if (window.Router && Router.isInitialized() && viewPath) {
+            Router.navigate('/' + (viewPath === 'dashboard' ? '' : viewPath));
+          } else {
+            window.location.href = href;
+          }
         });
       });
     }
@@ -428,6 +433,64 @@
       timer = setTimeout(function() { fn.apply(ctx, args); }, delay);
     };
   };
+
+  /* === [安全] 全局 HTML 转义函数（覆盖 &, <, >, ", '）=== */
+  window.escapeHtml = function(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  };
+
+  /* === [安全] 全局 URL 解析（白名单协议过滤，拒绝 javascript:/vbscript:）=== */
+  window._resolveUrl = function(url) {
+    if (!url) return '';
+    // 白名单：仅允许 http(s)、data:image/、blob: 协议
+    if (/^https?:\/\//i.test(url)) return url;
+    if (/^data:image\/(jpeg|png|webp|gif|bmp|svg\+xml)/i.test(url)) return url;
+    if (/^blob:/i.test(url)) return url;
+    // 拒绝 javascript:, vbscript:, data:(非图片) 等危险协议
+    if (/^(javascript|vbscript|data):/i.test(url)) return '';
+    var base = (window.APP_CONFIG && window.APP_CONFIG.server_base) || '';
+    if (base && url.charAt(0) === '/') return base + url;
+    if (base) return base + '/' + url;
+    return url;
+  };
+
+  /* === [安全] 安全创建 img 元素（避免 innerHTML 拼接 URL）=== */
+  window._safeCreateImg = function(src, alt, fallbackSrc, extraClass) {
+    var img = document.createElement('img');
+    img.src = src;
+    img.alt = alt || '';
+    if (extraClass) img.className = extraClass;
+    img.onerror = function() {
+      this.onerror = null;
+      if (fallbackSrc) this.src = fallbackSrc;
+    };
+    return img;
+  };
+
+  /* === [安全] 运行时注入 CSP meta 标签 === */
+  (function injectCSP() {
+    // 仅在未设置 CSP 时注入；生产环境应由后端 HTTP header 控制
+    if (document.querySelector('meta[http-equiv="Content-Security-Policy"]')) return;
+    var serverBase = (window.APP_CONFIG && window.APP_CONFIG.server_base) || '';
+    var imgSrc = "'self' data: blob:" + (serverBase ? ' ' + serverBase : '');
+    var policy = "default-src 'self'; " +
+      "script-src 'self' 'unsafe-inline'; " +
+      "style-src 'self' 'unsafe-inline'; " +
+      "img-src " + imgSrc + "; " +
+      "connect-src 'self'" + (serverBase ? ' ' + serverBase + ' ' + serverBase.replace(/^http/, 'ws') : '') + "; " +
+      "font-src 'self' data:; " +
+      "object-src 'none'; " +
+      "frame-src 'none'";
+    try {
+      var meta = document.createElement('meta');
+      meta.setAttribute('http-equiv', 'Content-Security-Policy');
+      meta.setAttribute('content', policy);
+      var head = document.head || document.getElementsByTagName('head')[0];
+      if (head) head.insertBefore(meta, head.firstChild);
+    } catch (e) {}
+  })();
 
   /* === P0-3：原生通知点击跳转钩子 ===
    * MainActivity.handleNotificationIntent 在通知被点击时调用此函数，

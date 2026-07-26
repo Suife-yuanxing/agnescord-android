@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="shared/base.css">
 <link rel="stylesheet" href="shared/components.css">
 <link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/dark-mode.css">
 <link rel="stylesheet" href="shared/effects.css">
 <style>
 /* ===== QQ 通道 — 页面专属样式 ===== */
@@ -103,7 +102,7 @@
 </style>
 </head>
 <body>
-<div class="phone" id="phoneFrame">
+<div class="phone" id="phoneFrame" data-emotion="2">
   <div class="title-bar">
     <span class="title">QQ 通道</span>
     <a class="btn-icon-round" href="通道配置.html" title="通道配置">
@@ -405,8 +404,8 @@ if (API.isLoggedIn()) {
         return;
       }
       container.innerHTML = d.messages.map(function(m) {
-        var src = m.source || m.sender || '';
-        var txt = m.content || m.text || '';
+        var src = escapeHtml(m.source || m.sender || '');
+        var txt = escapeHtml(m.content || m.text || '');
         var t = m.time ? new Date(m.time * 1000).toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'}) : '';
         return '<div class="setting-item" style="margin:0;border-radius:0;background:transparent;">' +
           '<div style="display:flex;align-items:center;gap:10px;width:100%;">' +

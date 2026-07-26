@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="shared/base.css">
 <link rel="stylesheet" href="shared/components.css">
 <link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/dark-mode.css">
 <link rel="stylesheet" href="shared/effects.css">
 <script src="shared/native.js"></script>
 <style>
@@ -508,7 +507,7 @@ body {
 </style>
 </head>
 <body>
-<div class="phone" id="phoneFrame">
+<div class="phone" id="phoneFrame" data-emotion="5">
   <!-- 自定义聊天壁纸层 -->
   <div class="chat-bg" id="chatBg"></div>
 
@@ -1149,15 +1148,7 @@ var _origOnToken = null;
 <script src="shared/app.js"></script>
 <script src="shared/api.js"></script>
 <script>
-// 补全服务器URL前缀：相对路径 → 绝对路径
-function _resolveUrl(url) {
-  if (!url) return '';
-  if (url.indexOf('http') === 0 || url.indexOf('data:') === 0 || url.indexOf('blob:') === 0) return url;
-  var base = (window.APP_CONFIG && window.APP_CONFIG.server_base) || '';
-  if (base && url.charAt(0) === '/') return base + url;
-  if (base) return base + '/' + url;
-  return url;
-}
+// [安全] _resolveUrl 已由 app.js 全局提供（含协议白名单过滤）
 
 // ===== 聊天背景全局同步 (loadChatBg + 跨页由 app.js storage 事件统一管理) =====
 loadChatBg();
@@ -1197,13 +1188,12 @@ loadChatBg();
       var isBotActive = bot.is_active !== false;
       var statusText = isBotActive ? '在线' : '已停用';
       personaEl.innerHTML = '<span class="dot"></span> ' + (label ? label + ' · ' + statusText : statusText);
-      console.log('[Chat] bot=' + bot.name + ' avatar_url=' + JSON.stringify(bot.avatar_url) + ' is_active=' + bot.is_active);
     }
     // A6：头像 — 读 avatar_url 或按 personality 映射预设猫娘
     var PERSONA_AVATARS = { tsundere: 'agnes-tsundere.png', gentle: 'agnes-gentle.png', sarcastic: 'agnes-sarcastic.png', energetic: 'agnes-energetic.png', emotionless: 'agnes-emotionless.png', sly: 'agnes-sly.png' };
     var avatarUrl = bot.avatar_url ? _resolveUrl(bot.avatar_url) : ('shared/agnes-' + (PERSONA_AVATARS[bot.personality] ? bot.personality : 'cat') + '.png');
     var fallbackAvatar = 'shared/agnes-' + (PERSONA_AVATARS[bot.personality] ? bot.personality : 'cat') + '.png';
-    console.log('[Chat] avatar resolved=' + avatarUrl + ' fallback=' + fallbackAvatar);
+    // [安全] 通过 .src 赋值而非 innerHTML 设置图片 URL
     var avImgs = document.querySelectorAll('.title-bar .avatar-wrap img, .msg-avatar img');
     avImgs.forEach(function(img) {
       img.src = avatarUrl;
@@ -1239,43 +1229,66 @@ function appendHistoryMessage(list, m) {
   var t = new Date((m.time || 0) * 1000);
   var hh = t.getHours().toString().padStart(2,'0');
   var mm = t.getMinutes().toString().padStart(2,'0');
-  // Bot 头像：使用实际 bot avatar_url，而非硬编码默认图
-  var botAvatarSrc = 'shared/agnes-cat.png';
-  if (window._chat && window._chat.bot && window._chat.bot.avatar_url) {
-    botAvatarSrc = _resolveUrl(window._chat.bot.avatar_url);
+  // [安全] 头像用 createElement 而非 innerHTML 拼接
+  var avatarEl;
+  if (isUser) {
+    avatarEl = document.createElement('div');
+    avatarEl.className = 'msg-avatar user';
+    avatarEl.textContent = '我';
+  } else {
+    avatarEl = document.createElement('div');
+    avatarEl.className = 'msg-avatar bot';
+    var catDiv = document.createElement('div');
+    catDiv.className = 'img-cat avatar img-sm';
+    var img = _safeCreateImg(
+      (window._chat && window._chat.bot && window._chat.bot.avatar_url) ? _resolveUrl(window._chat.bot.avatar_url) : 'shared/agnes-cat.png',
+      'Bot', 'shared/agnes-cat.png');
+    catDiv.appendChild(img);
+    avatarEl.appendChild(catDiv);
   }
-  var avatar = isUser
-    ? '<div class="msg-avatar user">我</div>'
-    : '<div class="msg-avatar bot"><div class="img-cat avatar img-sm"><img src="' + botAvatarSrc + '" alt="Bot" onerror="this.onerror=null;this.src=\'shared/agnes-cat.png\'"></div></div>';
+  row.appendChild(avatarEl);
+  var bubbleDiv = document.createElement('div');
   var bubbleClass = isUser ? 'bubble me' : 'bubble bot';
+  bubbleDiv.className = bubbleClass;
   // 撤回消息渲染
   if (m.recalled) {
-    row.innerHTML = avatar + '<div class="' + bubbleClass + '" data-recalled="1">' +
-      '<span style="color:#C0A0B0;font-style:italic;">你撤回了一条消息</span></div>';
+    bubbleDiv.setAttribute('data-recalled', '1');
+    var span = document.createElement('span');
+    span.style.cssText = 'color:#C0A0B0;font-style:italic;';
+    span.textContent = '你撤回了一条消息';
+    bubbleDiv.appendChild(span);
   } else {
     // 图片消息：检查 content 是否是图片 URL
     var content = m.content || '';
     var isImage = m.type === 'image' || /\.(jpg|jpeg|png|gif|webp|bmp)(\?.*)?$/i.test(content);
     if (isImage && content) {
-      var imgUrl = _resolveUrl(content);
-      row.innerHTML = avatar + '<div class="' + bubbleClass + '" style="padding:5px;background:transparent;box-shadow:none;">' +
-        '<img class="msg-img" src="' + imgUrl + '" alt="图片" onclick="previewImage(this.src)" loading="lazy" style="max-width:200px;max-height:200px;border-radius:12px;cursor:pointer;">' +
-        '<div class="time" style="margin-top:4px;">' + hh + ':' + mm + '</div></div>';
+      bubbleDiv.style.cssText = 'padding:5px;background:transparent;box-shadow:none;';
+      var msgImg = _safeCreateImg(_resolveUrl(content), '图片');
+      msgImg.className = 'msg-img';
+      msgImg.loading = 'lazy';
+      msgImg.style.cssText = 'max-width:200px;max-height:200px;border-radius:12px;cursor:pointer;';
+      msgImg.addEventListener('click', function() { previewImage(this.src); });
+      bubbleDiv.appendChild(msgImg);
+      var timeDiv = document.createElement('div');
+      timeDiv.className = 'time';
+      timeDiv.style.marginTop = '4px';
+      timeDiv.textContent = hh + ':' + mm;
+      bubbleDiv.appendChild(timeDiv);
     } else {
-      row.innerHTML = avatar + '<div class="' + bubbleClass + '">' + escapeHtml(content) + '<div class="time">' + hh + ':' + mm + '</div></div>';
+      bubbleDiv.appendChild(document.createTextNode(content));
+      var timeDiv = document.createElement('div');
+      timeDiv.className = 'time';
+      timeDiv.textContent = hh + ':' + mm;
+      bubbleDiv.appendChild(timeDiv);
     }
   }
   // 记录 message_id
-  var bubbleEl = row.querySelector('.bubble');
-  if (bubbleEl && m.id) bubbleEl.setAttribute('data-msg-id', m.id);
+  if (m.id) bubbleDiv.setAttribute('data-msg-id', m.id);
+  row.appendChild(bubbleDiv);
   list.appendChild(row);
 }
 
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, function(c) {
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-  });
-}
+// [安全] escapeHtml 已由 app.js 全局提供
 
 // Bot 头像更换
 function changeBotAvatar() {
@@ -1366,9 +1379,12 @@ function connectWs() {
       }
       window._chat.pendingBotBubble = null;
     },
+    // [安全] 指数退避重连（替代固定 3s 重连）
+    _autoReconnect: true,
     onClose: function(ev) {
-      if (!window._chat._manualClose) {
-        setTimeout(function() { if (!window._chat._manualClose) connectWs(); }, 3000);
+      // api.js 内置的指数退避重连已生效（3s→6s→12s→24s→30s 上限）
+      if (window._chat._manualClose) {
+        if (typeof API.cancelWsReconnect === 'function') API.cancelWsReconnect();
       }
     },
   });

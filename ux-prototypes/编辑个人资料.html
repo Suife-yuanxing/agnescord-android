@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="shared/base.css">
 <link rel="stylesheet" href="shared/components.css">
 <link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/dark-mode.css">
 <link rel="stylesheet" href="shared/effects.css">
 <style>
 /* ===== Page-Specific: 编辑个人资料 ===== */
@@ -148,7 +147,7 @@ textarea.input-field { resize: none; height: 80px; }
 </style>
 </head>
 <body>
-<div class="phone">
+<div class="phone" data-emotion="2">
   <div class="title-bar">
     <a class="back" href="我的.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -232,15 +231,7 @@ textarea.input-field { resize: none; height: 80px; }
 </div>
 
 <script>
-// 补全服务器URL前缀：相对路径 → 绝对路径
-function _resolveUrl(url) {
-  if (!url) return '';
-  if (url.indexOf('http') === 0 || url.indexOf('data:') === 0 || url.indexOf('blob:') === 0) return url;
-  var base = (window.APP_CONFIG && window.APP_CONFIG.server_base) || '';
-  if (base && url.charAt(0) === '/') return base + url;
-  if (base) return base + '/' + url;
-  return url;
-}
+// [安全] _resolveUrl 已由 app.js 全局提供（含协议白名单过滤）
 
 var selectedGender = '男';
 var currentPersona = 'gentle'; // 当前猫娘人格：gentle/tsundere/energetic/default
@@ -288,8 +279,15 @@ function handleAvatarSelected(e) {
     var wrap = document.getElementById('avatarDisplay');
     if (wrap && r.avatar_url) {
       var fullUrl = _resolveUrl(r.avatar_url);
-      wrap.innerHTML = '<img src="' + fullUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' +
-        '<div class="avatar-edit-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></div>';
+      // [安全] 用 createElement 安全设置图片 src
+      wrap.innerHTML = '';
+      var img = _safeCreateImg(fullUrl, '头像');
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+      wrap.appendChild(img);
+      var badge = document.createElement('div');
+      badge.className = 'avatar-edit-badge';
+      badge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
+      wrap.appendChild(badge);
     }
     showToast('头像已更新');
     // 同步到 current_user
@@ -324,7 +322,7 @@ function saveProfile() {
   var token = localStorage.getItem('access_token');
   var hasToken = !!(token && token.length > 10);
   var server = (window.APP_CONFIG && window.APP_CONFIG.server_base) || 'unknown';
-  console.log('[profile] save data:', JSON.stringify(data), 'token=' + (hasToken ? token.substring(0,20) + '...' : 'none') + ' server=' + server);
+  // [安全] 不再记录 token 片段到控制台
   
   if (typeof API === 'undefined') {
     showToast('API 未加载，请重启 App');
@@ -467,6 +465,7 @@ function hideDatePicker() {
 }
 </script>
 
+<script src="shared/native.js"></script>
 <script src="shared/config.js"></script>
 <script src="shared/api.js"></script>
 <script src="shared/app.js"></script>

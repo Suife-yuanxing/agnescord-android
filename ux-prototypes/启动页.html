@@ -52,8 +52,10 @@
    ================================================ */
 
 /* Orbs: 三色马卡龙光球，复用 effects.css 的 orb-float 关键帧 */
+/* 使用 emotion 变量控制装饰透明度 */
 .splash-orb {
   position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
+  opacity: var(--emotion-decor-opacity, 1);
 }
 .splash-orb.pink {
   width: 220px; height: 220px; top: -80px; right: -40px;
@@ -75,6 +77,7 @@
 .splash-petal {
   position: absolute; pointer-events: none; z-index: 0;
   border-radius: 50% 0 50% 0;
+  opacity: var(--emotion-decor-opacity, 1);
   animation: petal-drift linear infinite;
 }
 @keyframes petal-drift {
@@ -200,7 +203,7 @@
 </style>
 </head>
 <body>
-<div class="phone splash" role="img" aria-label="林念念 — 启动画面，加载中">
+<div class="phone splash" data-emotion="5" role="img" aria-label="林念念 — 启动画面，加载中">
 
   <!-- Ambient Orbs -->
   <div class="splash-orb pink" aria-hidden="true"></div>
@@ -260,8 +263,9 @@ document.querySelector('.splash-version').addEventListener('click', function() {
     DEV_MODE = !DEV_MODE;
     localStorage.setItem('dev_mode', DEV_MODE ? '1' : '0');
     if (DEV_MODE) {
-      localStorage.setItem('access_token', 'dev.mock.token.skip.login');
-      localStorage.setItem('refresh_token', 'dev.mock.refresh.token');
+      // [安全] mock token 不再被 api.js 特殊处理，API 请求将返回 401
+      localStorage.setItem('access_token', 'dev.mock.token');
+      localStorage.setItem('refresh_token', 'dev.mock.refresh');
       localStorage.setItem('current_user', JSON.stringify({
         id: 0, nickname: 'DevTester', phone: '13800000000',
         avatar_url: null, created_at: new Date().toISOString()
@@ -289,7 +293,8 @@ function doNavigate() {
   // 使用 location.replace 避免启动页留在返回栈中
   try {
     if (API.isLoggedIn()) {
-      location.replace('首页仪表盘.html');
+      // SPA 入口优先，降级到独立首页（删除 app.html 后改回此处）
+      location.replace('app.html');
     } else {
       location.replace('登录页.html');
     }

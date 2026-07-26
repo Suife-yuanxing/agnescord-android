@@ -8,8 +8,11 @@
 <link rel="stylesheet" href="shared/base.css">
 <link rel="stylesheet" href="shared/components.css">
 <link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/dark-mode.css">
 <link rel="stylesheet" href="shared/effects.css">
+<script src="shared/native.js"></script>
+<script src="shared/vendor/lunar.min.js"></script>
+<script src="shared/mood-engine.js"></script>
+<script src="shared/festival-system.js"></script>
 <style>
 /* ===== Bot 设置 — 页面专属样式 ===== */
 .scroll-area { padding: 12px 0 8px; }
@@ -97,6 +100,27 @@
 }
 .danger-btn:hover { background: #F472B6; color: #fff; }
 
+/* ===== Mood Indicator (Phase 2) ===== */
+.mood-indicator {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px;
+  background: rgba(255,255,255,0.6); border: 1px solid rgba(244,114,182,0.15);
+  font-size: 12px; font-weight: 600; color: #6A5060;
+  transition: all 0.3s;
+}
+.mood-indicator .mood-emoji { font-size: 16px; }
+.phone.dark-mode .mood-indicator { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.08); color: #D0C8E0; }
+
+/* Festival badge */
+.festival-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255,224,232,0.8), rgba(255,212,220,0.8));
+  font-size: 11px; font-weight: 600; color: #F472B6;
+  margin-left: 8px;
+}
+.phone.dark-mode .festival-badge { background: rgba(244,114,182,0.12); color: #F9A8D4; }
+
 /* ===== Dark Mode ===== */
 .phone.dark-mode .preview-card { background: linear-gradient(135deg, #2A1A2E, #1E1A2E); border-color: rgba(244, 114, 182,0.15); }
 .phone.dark-mode .preview-card .preview-bubble { background: #16213E; color: #E0D8E8; }
@@ -113,7 +137,7 @@
 </style>
 </head>
 <body>
-<div class="phone">
+<div class="phone" data-emotion="3">
   <div class="title-bar">
     <a class="back" href="首页仪表盘.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -124,7 +148,13 @@
   <div class="scroll-area">
     <!-- 预览 -->
     <div class="preview-card">
-      <div class="preview-label">实时预览</div>
+      <div class="preview-label">实时预览
+        <span class="mood-indicator" id="moodBadge" style="margin-left:8px;">
+          <span class="mood-emoji">😊</span>
+          <span class="mood-label">开心</span>
+        </span>
+        <span class="festival-badge" id="festivalBadge" style="display:none;"></span>
+      </div>
       <div class="preview-bubble" id="previewBubble">嗯，我会用温柔的语气回复你~</div>
     </div>
 
@@ -215,6 +245,38 @@ function updateSlider(slider, labelId, labels) {
 function selectRadio(el) {
   el.parentElement.querySelectorAll('.radio-chip').forEach(function(c) { c.classList.remove('selected'); });
   el.classList.add('selected');
+}
+
+// Initialize MoodEngine (Phase 2)
+if (typeof MoodEngine !== 'undefined') {
+  MoodEngine.init();
+  var _updateMoodBadge = function(info) {
+    var badge = document.getElementById('moodBadge');
+    if (!badge || !info) return;
+    badge.querySelector('.mood-emoji').textContent = info.emoji || '😊';
+    badge.querySelector('.mood-label').textContent = info.label || '开心';
+    // Apply mood class to preview cat image if present
+    var catImg = document.querySelector('.preview-card .img-cat');
+    if (catImg) {
+      catImg.className = catImg.className.replace(/mood-\w+/g, '').trim();
+      if (info.cssClass) catImg.classList.add(info.cssClass);
+    }
+  };
+  _updateMoodBadge(MoodEngine.getMoodInfo());
+  MoodEngine.onMoodChange(_updateMoodBadge);
+}
+
+// Initialize FestivalSystem (Phase 2)
+if (typeof FestivalSystem !== 'undefined') {
+  FestivalSystem.init();
+  var today = FestivalSystem.getToday();
+  if (today) {
+    var fb = document.getElementById('festivalBadge');
+    if (fb) {
+      fb.textContent = today.emoji + ' ' + today.name;
+      fb.style.display = '';
+    }
+  }
 }
 
 // Load bot settings

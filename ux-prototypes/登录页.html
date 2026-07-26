@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="shared/base.css">
 <link rel="stylesheet" href="shared/components.css">
 <link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/dark-mode.css">
 <link rel="stylesheet" href="shared/effects.css">
 <style>
 /* ===== 登录页 — 页面专属样式 ===== */
@@ -67,7 +66,7 @@ h1 { font-size: 22px; font-weight: 800; color: #3A2030; }
 </style>
 </head>
 <body>
-<div class="phone">
+<div class="phone" data-emotion="2">
   <div class="header">
     <div class="img-cat hero img-md"><img src="shared/agnes-cat.png" alt="猫娘"></div>
     <h1>欢迎回来</h1>
@@ -131,26 +130,31 @@ if (API.isLoggedIn()) {
   API.listBots().then(function(bots) {
     if (bots && bots.count > 0) {
       API.setCurrentBotId(bots.bots[0].id);
-      location.replace('首页仪表盘.html');
+      location.replace('app.html');
     } else {
       location.replace('Bot创建向导.html');
     }
   }).catch(function() {
-    location.replace('首页仪表盘.html');
+    location.replace('app.html');
   });
   // 注意：不继续执行后续登录表单逻辑（页面已被 replace）
 }
 
-// 测试直登：注入 mock token，跳过登录用于 UI/离线测试
+// [安全] 测试直登：仅在开发模式可用（需先在启动页连续点击版本号 5 次开启）
 function testLogin() {
-  localStorage.setItem('access_token', 'dev.mock.token.skip.login');
-  localStorage.setItem('refresh_token', 'dev.mock.refresh.token');
+  if (localStorage.getItem('dev_mode') !== '1') {
+    showToast('测试模式未开启，请在启动页连续点击版本号 5 次开启');
+    return;
+  }
+  // [安全] mock token 不再被 api.js 特殊处理，所有 API 请求将返回 401
+  localStorage.setItem('access_token', 'dev.mock.token');
+  localStorage.setItem('refresh_token', 'dev.mock.refresh');
   localStorage.setItem('current_user', JSON.stringify({
     id: 0, nickname: '测试用户', phone: '13800000000',
     avatar_url: null, is_admin: false, created_at: new Date().toISOString()
   }));
-  showToast('已进入测试模式（离线）');
-  setTimeout(function(){ location.replace('首页仪表盘.html'); }, 200);
+  showToast('⚠️ 开发模式：API 请求将失败');
+  setTimeout(function(){ location.replace('app.html'); }, 200);
 }
 
 async function sendCode() {
@@ -207,13 +211,13 @@ async function handleLogin() {
       var bots = await API.listBots();
       if (bots && bots.count > 0) {
         API.setCurrentBotId(bots.bots[0].id);
-        setTimeout(function() { location.replace('首页仪表盘.html'); }, 300);
+        setTimeout(function() { location.replace('app.html'); }, 300);
       } else {
         setTimeout(function() { location.replace('Bot创建向导.html'); }, 300);
       }
     } catch (e) {
       // listBots 失败不阻塞，默认跳首页
-      setTimeout(function() { location.replace('首页仪表盘.html'); }, 300);
+      setTimeout(function() { location.replace('app.html'); }, 300);
     }
   } catch (e) {
     var msg = e.message || '登录失败';

@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "powershell -ExecutionPolicy Bypass -File scripts/copy-vendor.ps1",
+    "copy-vendor": "powershell -ExecutionPolicy Bypass -File scripts/copy-vendor.ps1",
+    "build:api": "powershell -ExecutionPolicy Bypass -File scripts/build-api.ps1",
+    "build:min": "powershell -ExecutionPolicy Bypass -File scripts/build-minify.ps1"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +17,10 @@
   "dependencies": {
     "@capacitor/android": "^8.4.1",
     "@capacitor/cli": "^8.4.1",
-    "@capacitor/core": "^8.4.1"
+    "@capacitor/core": "^8.4.1",
+    "javascript-state-machine": "^3.1.0",
+    "lucide": "^1.21.0",
+    "lunar-javascript": "^1.7.7",
+    "reconnecting-websocket": "^4.4.0"
   }
 }

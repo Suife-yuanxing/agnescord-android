@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="shared/tokens.css">
 <link rel="stylesheet" href="shared/base.css">
 <link rel="stylesheet" href="shared/components.css">
-<link rel="stylesheet" href="shared/dark-mode.css">
 <link rel="stylesheet" href="shared/effects.css">
 <style>
 /* ===== 开发者面板 — 页面专属样式 ===== */
@@ -258,11 +257,31 @@ body { background-attachment: fixed; overflow-x: hidden; }
 
 /* Toast */
 .toast { pointer-events: none; }
+
+/* ── Tab Row (Phase 2) ── */
+.admin-tab-row {
+  display: flex; margin: 10px 20px 0;
+  background: rgba(255,255,255,0.4); border-radius: 12px;
+  padding: 3px; gap: 2px;
+}
+.phone.dark-mode .admin-tab-row { background: rgba(255,255,255,0.04); }
+.admin-tab-btn {
+  flex: 1; text-align: center; padding: 8px 0; font-size: 12px; font-weight: 700;
+  border-radius: 10px; cursor: pointer; transition: all 0.3s;
+  color: var(--text-secondary); border: none; background: transparent; font-family: inherit;
+}
+.admin-tab-btn.active {
+  background: #fff; color: var(--color-primary); box-shadow: 0 2px 8px rgba(244,114,182,0.1);
+}
+.phone.dark-mode .admin-tab-btn.active { background: #2A2A3E; color: #F9A8D4; }
+.admin-tab-panel { display: none; }
+.admin-tab-panel.active { display: block; animation: adminTabFade 0.3s ease; }
+@keyframes adminTabFade { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 </style>
 </head>
 <body>
 
-<div class="phone">
+<div class="phone" data-emotion="1">
   <!-- Title Bar — 深色区分管理模式 -->
   <div class="title-bar" style="background: linear-gradient(135deg, #1A1A2E 0%, #16213E 50%, #1A1A2E 100%);">
     <a class="back" href="index.html" style="color:rgba(255,255,255,0.85);">
@@ -272,8 +291,19 @@ body { background-attachment: fixed; overflow-x: hidden; }
     <span style="width:44px;flex-shrink:0;"></span>
   </div>
 
+  <!-- Tab Row (Phase 2) -->
+  <div class="admin-tab-row">
+    <button class="admin-tab-btn active" onclick="switchAdminTab('overview',this)">概览</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('users',this)">用户</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('bots',this)">Bot</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('backup',this)">备份</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('logs',this)">日志</button>
+  </div>
+
   <div class="scroll-area">
 
+    <!-- Tab: 概览 -->
+    <div class="admin-tab-panel active" id="tabPanel-overview">
     <!-- 系统健康四格 -->
     <div class="health-row">
       <div class="health-card">
@@ -344,6 +374,10 @@ body { background-attachment: fixed; overflow-x: hidden; }
       </button>
     </div>
 
+    </div><!-- /tab: 概览 -->
+
+    <!-- Tab: 用户 -->
+    <div class="admin-tab-panel" id="tabPanel-users">
     <!-- 全部用户 -->
     <div class="section-header">
       <div class="sh-title">
@@ -364,7 +398,10 @@ body { background-attachment: fixed; overflow-x: hidden; }
         </tbody>
       </table>
     </div>
+    </div><!-- /tab: 用户 -->
 
+    <!-- Tab: Bot -->
+    <div class="admin-tab-panel" id="tabPanel-bots">
     <!-- 全部 Bot -->
     <div class="section-header">
       <div class="sh-title">
@@ -400,7 +437,10 @@ body { background-attachment: fixed; overflow-x: hidden; }
       <div class="token-item"><span style="color:var(--text-secondary);font-size:13px;padding:12px 0;display:block;text-align:center;">加载中…</span></div>
       <div class="token-summary" data-container="tokens-summary">加载中…</div>
     </div>
+    </div><!-- /tab: Bot -->
 
+    <!-- Tab: 备份 -->
+    <div class="admin-tab-panel" id="tabPanel-backup">
     <!-- 备份管理 -->
     <div class="section-header">
       <div class="sh-title">
@@ -418,7 +458,10 @@ body { background-attachment: fixed; overflow-x: hidden; }
       <button class="ba-btn" onclick="doCreateBackup()" style="padding:10px 18px;background:var(--color-primary,#F472B6);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;">一键备份</button>
       <button class="ba-btn caution" onclick="doLogSnapshot()" style="padding:10px 18px;background:var(--color-warning,#FBBF24);color:#1a1a2e;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;">日志快照</button>
     </div>
+    </div><!-- /tab: 备份 -->
 
+    <!-- Tab: 日志 -->
+    <div class="admin-tab-panel" id="tabPanel-logs">
     <!-- 系统日志 -->
     <div class="section-header">
       <div class="sh-title">
@@ -439,6 +482,7 @@ body { background-attachment: fixed; overflow-x: hidden; }
     <div class="log-card" id="logContainer" data-container="logs">
       <div class="log-line"><span style="color:var(--text-secondary);font-size:13px;">加载中…</span></div>
     </div>
+    </div><!-- /tab: 日志 -->
 
   </div><!-- /scroll-area -->
 
@@ -468,6 +512,27 @@ body { background-attachment: fixed; overflow-x: hidden; }
 <script src="shared/app.js"></script>
 <script>
 
+// ===== Tab 切换 (Phase 2) =====
+var _adminTabKey = 'admin_active_tab';
+function switchAdminTab(tab, btn) {
+  document.querySelectorAll('.admin-tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.admin-tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  var panel = document.getElementById('tabPanel-' + tab);
+  if (panel) panel.classList.add('active');
+  try { localStorage.setItem(_adminTabKey, tab); } catch(e) {}
+}
+// 恢复上次的 Tab
+(function(){
+  try {
+    var saved = localStorage.getItem(_adminTabKey);
+    if (saved && document.getElementById('tabPanel-' + saved)) {
+      var btn = document.querySelector('.admin-tab-btn[onclick*="' + saved + '"]');
+      switchAdminTab(saved, btn);
+    }
+  } catch(e) {}
+})();
+
 // Admin panel data loading
 function loadAdminData() {
   if (!API.isLoggedIn()) {
@@ -477,16 +542,14 @@ function loadAdminData() {
 
   // 权限检查：确认当前用户是管理员
   API.getProfile().then(function(user) {
-    console.log('[admin] user role:', user.role, 'is_admin:', user.is_admin);
     if (!user.is_admin && user.role !== 'admin') {
-      showAdminError('权限不足', '当前账号 (' + _esc(user.nickname || '') + ') 不是管理员，无法访问开发者面板。\n请联系管理员获取权限。');
+      showAdminError('权限不足', '当前账号不是管理员，无法访问开发者面板。\n请联系管理员获取权限。');
       return;
     }
     // 权限通过，加载数据
     loadAllAdminSections();
   }).catch(function(err) {
-    console.error('[admin] profile check failed:', err.message);
-    showAdminError('权限检查失败', err.message || '无法确认用户权限，请检查网络连接。');
+    showAdminError('权限检查失败', '无法确认用户权限，请检查网络连接。');
   });
 }
 
@@ -495,9 +558,9 @@ function showAdminError(title, desc) {
   if (!scrollArea) return;
   var errDiv = document.createElement('div');
   errDiv.style.cssText = 'margin:20px;padding:24px;background:rgba(255,255,255,0.9);backdrop-filter:blur(8px);border-radius:18px;border:1.5px solid rgba(255,107,107,0.2);text-align:center;';
-  errDiv.innerHTML = '<div style="font-size:18px;font-weight:800;color:#3A2030;margin-bottom:8px;">' + title + '</div>' +
-    '<div style="font-size:13px;color:#B090A0;line-height:1.8;white-space:pre-line;">' + desc.replace(/</g,'&lt;') + '</div>' +
-    '<div style="margin-top:12px;font-size:11px;color:#C0A0B0;">服务器: ' + _esc((window.APP_CONFIG && window.APP_CONFIG.server_base) || '未配置') + '</div>' +
+  // [安全] title 和 desc 全部转义，不暴露服务器地址
+  errDiv.innerHTML = '<div style="font-size:18px;font-weight:800;color:#3A2030;margin-bottom:8px;">' + escapeHtml(title) + '</div>' +
+    '<div style="font-size:13px;color:#B090A0;line-height:1.8;white-space:pre-line;">' + escapeHtml(desc) + '</div>' +
     '<button onclick="location.reload()" style="margin-top:16px;padding:10px 28px;border-radius:14px;background:#F472B6;color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">重试</button>';
   scrollArea.insertBefore(errDiv, scrollArea.firstChild);
 }
@@ -505,7 +568,6 @@ function showAdminError(title, desc) {
 function loadAllAdminSections() {
     // System metrics
     API.getSystemMetrics().then(function(m) {
-      console.log('[admin] metrics:', JSON.stringify(m).substring(0, 200));
       var cpuEl = document.querySelector('[data-metric="cpu"]');
       var memEl = document.querySelector('[data-metric="mem"]');
       var bwEl = document.querySelector('[data-metric="bw"]');
@@ -660,12 +722,26 @@ function loadAllAdminSections() {
               '<div class="bi-detail">' + sizeStr + ' · sha256 ' + (b.sha256_status || 'unknown') + '</div>' +
             '</div>' +
             '<div class="backup-actions">' +
-              '<button class="ba-btn" title="下载" onclick="window.open(\'/api/v1/admin/backups/' + encodeURIComponent(b.id) + '/download\',\'_blank\')">' +
+              '<button class="ba-btn" title="下载" data-backup-id="' + escapeHtml(b.id) + '" data-backup-name="' + escapeHtml(b.file_name || b.id) + '">' +
                 '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
               '</button>' +
             '</div>' +
           '</div>';
         }).join('');
+        // [安全] 事件委托：备份下载用 fetch+blob，避免 window.open 无鉴权
+        container.querySelectorAll('.ba-btn[data-backup-id]').forEach(function(btn) {
+          btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var backupId = this.getAttribute('data-backup-id');
+            var fileName = this.getAttribute('data-backup-name');
+            showToast('下载中…');
+            API.downloadBackup(backupId, fileName).then(function() {
+              showToast('下载完成');
+            }).catch(function(err) {
+              showToast('下载失败: ' + (err.message || '未知错误'), 'error');
+            });
+          });
+        });
       } else {
         container.innerHTML = '<div class="backup-card"><div class="backup-info"><div class="bi-name" style="color:var(--text-secondary);">暂无备份</div></div></div>';
       }
@@ -681,7 +757,8 @@ function loadAllAdminSections() {
     loadLogs('all');
   }
 
-  function _esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  // [安全] 统一使用全局 escapeHtml，此页面不再定义本地 _esc
+  function _esc(s) { return escapeHtml(s); }
   function formatTokens(n) { if (n >= 1000000) return (n/1000000).toFixed(1) + 'M'; if (n >= 1000) return (n/1000).toFixed(1) + 'K'; return String(n); }
   function formatSize(bytes) { if (bytes >= 1048576) return (bytes/1048576).toFixed(1) + ' MB'; if (bytes >= 1024) return (bytes/1024).toFixed(0) + ' KB'; return bytes + ' B'; }
   loadAdminData();

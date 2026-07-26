@@ -23,8 +23,26 @@ var API = (function() {
     return _base().replace(/^http/, 'ws') + '/api/v1';
   }
 
-  // ── Token 持久化（localStorage，内测足够）──
-  function getAccessToken() { return localStorage.getItem('access_token'); }
+  // ── Token 持久化（localStorage）+ JWT 过期校验 ──
+  // [安全] 解析 JWT payload 检查过期时间（不验证签名，仅客户端自检）
+  function _jwtExpired(token) {
+    if (!token) return true;
+    try {
+      var parts = token.split('.');
+      if (parts.length !== 3) return false; // 非标准 JWT，跳过检查
+      var payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+      if (payload.exp && (payload.exp * 1000) < Date.now()) return true;
+    } catch (e) {} // 解析失败不阻断
+    return false;
+  }
+  function getAccessToken() {
+    var token = localStorage.getItem('access_token');
+    if (token && _jwtExpired(token)) {
+      // access_token 已过期，尝试用 refresh_token 刷新
+      return null; // 返回 null 触发 401 刷新流程
+    }
+    return token;
+  }
   function getRefreshToken() { return localStorage.getItem('refresh_token'); }
   function setTokens(access, refresh) {
     localStorage.setItem('access_token', access);
@@ -50,7 +68,7 @@ var API = (function() {
       try { window.NativeBridge.clearNativeTokens(); } catch (e) {}
     }
   }
-  function isLoggedIn() { return !!getAccessToken(); }
+  function isLoggedIn() { return !!localStorage.getItem('access_token'); }
   function getCurrentUser() {
     try { var u = localStorage.getItem('current_user'); return u ? JSON.parse(u) : null; }
     catch (e) { return null; }
@@ -94,24 +112,37 @@ var API = (function() {
     return p;
   }
 
+  // ── 全局超时配置（弱网保护）──
+  var FETCH_TIMEOUT = 15000; // 15s
+
+  function _timeoutSignal(ms) {
+    var ctrl = new AbortController();
+    var timer = setTimeout(function() { ctrl.abort(); }, ms);
+    return { signal: ctrl.signal, clear: function() { clearTimeout(timer); } };
+  }
+
   // ── fetch 封装 ──
   async function _fetch(path, options) {
     options = options || {};
     var headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
     var token = getAccessToken();
     if (token) headers['Authorization'] = 'Bearer ' + token;
-    var resp = await fetch(_apiBase() + path, Object.assign({}, options, { headers: headers }));
+    var ts = _timeoutSignal(options.timeout || FETCH_TIMEOUT);
+    var resp;
+    try {
+      resp = await fetch(_apiBase() + path, Object.assign({}, options, { headers: headers, signal: ts.signal }));
+    } catch (e) {
+      ts.clear();
+      if (e.name === 'AbortError') throw new Error('请求超时，请检查网络');
+      throw new Error('网络错误: ' + (e.message || '无法连接服务器'));
+    }
+    ts.clear();
     // 401 → 尝试刷新一次重试
     if (resp.status === 401 && !options._retried) {
       // 无 token 的请求（登录/注册）→ 直接返回 resp，让调用方解析真实错误
-      var _tk = getAccessToken();
+      var _tk = localStorage.getItem('access_token');
       if (!_tk) {
         return resp;
-      }
-      // 测试模式（mock token）→ 不刷新、不清 token，保持测试会话
-      // 各页面自行 catch 并降级为空状态，便于离线/UI 测试
-      if (_tk.indexOf('dev.mock.') === 0) {
-        throw new Error('测试模式：后端不可达');
       }
       var ok = await refreshAccessToken();
       if (ok) {
@@ -131,12 +162,19 @@ var API = (function() {
     var headers = Object.assign({}, options.headers || {});
     var token = getAccessToken();
     if (token) headers['Authorization'] = 'Bearer ' + token;
-    var resp = await fetch(_apiBase() + path, Object.assign({}, options, { method: 'POST', headers: headers, body: formData }));
+    var ts = _timeoutSignal(options.timeout || 30000); // 上传给 30s
+    var resp;
+    try {
+      resp = await fetch(_apiBase() + path, Object.assign({}, options, { method: 'POST', headers: headers, body: formData, signal: ts.signal }));
+    } catch (e) {
+      ts.clear();
+      if (e.name === 'AbortError') throw new Error('上传超时，请检查网络');
+      throw new Error('网络错误: ' + (e.message || '无法连接服务器'));
+    }
+    ts.clear();
     if (resp.status === 401 && !options._retried) {
-      var _tk = getAccessToken();
-      if (_tk && _tk.indexOf('dev.mock.') === 0) {
-        throw new Error('测试模式：后端不可达');
-      }
+      var _tk = localStorage.getItem('access_token');
+      if (!_tk) { return resp; }
       var ok = await refreshAccessToken();
       if (ok) { options._retried = true; return _upload(path, formData, options); }
       clearTokens();
@@ -411,7 +449,7 @@ var API = (function() {
     return r.json();
   }
 
-  // 消息操作（撤回/删除/举报）— ⚠待后端新增端点
+  // 消息操作（撤回/删除/举报）
   async function recallMessage(messageId) {
     var r = await _fetch('/messages/' + messageId + '/recall', { method: 'POST' });
     if (!r.ok) throw new Error(await _parseError(r));
@@ -439,6 +477,8 @@ var API = (function() {
   var _ws = null;
   var _wsHandlers = null;
 
+  // [安全] WebSocket 自动重连 — 使用 reconnecting-websocket 库
+  // 库自动处理指数退避重连（3s→30s），close() 后自动停止重连
   function openChatWs(handlers) {
     handlers = handlers || {};
     var token = getAccessToken();
@@ -446,18 +486,30 @@ var API = (function() {
     if (_ws) { try { _ws.close(); } catch (e) {} _ws = null; }
 
     var url = _wsBase() + '/chat/ws';
-    var ws;
+    var protocols = ['bearer.' + token];
+    var rws;
     try {
-      ws = new WebSocket(url, ['bearer.' + token]);
+      if (typeof ReconnectingWebSocket !== 'undefined') {
+        rws = new ReconnectingWebSocket(url, protocols, {
+          maxReconnectionDelay: 30000,
+          minReconnectionDelay: 3000,
+          reconnectionDelayGrowFactor: 2.0,
+          connectionTimeout: 10000,
+          maxRetries: Infinity
+        });
+      } else {
+        // Fallback: 库未加载时使用原生 WebSocket（不自动重连）
+        rws = new WebSocket(url, protocols);
+      }
     } catch (e) {
       if (handlers.onError) handlers.onError('WebSocket 建立失败: ' + e.message);
       return null;
     }
-    _ws = ws;
+    _ws = rws;
     _wsHandlers = handlers;
 
-    ws.onopen = function() { if (handlers.onOpen) handlers.onOpen(); };
-    ws.onmessage = function(e) {
+    rws.onopen = function() { if (handlers.onOpen) handlers.onOpen(); };
+    rws.onmessage = function(e) {
       var f;
       try { f = JSON.parse(e.data); } catch (err) { return; }
       switch (f.type) {
@@ -470,13 +522,16 @@ var API = (function() {
         case 'read_ack': break;
       }
     };
-    ws.onerror = function() { if (handlers.onError) handlers.onError('WebSocket 错误'); };
-    ws.onclose = function(ev) {
-      if (_ws === ws) _ws = null;
+    rws.onerror = function() { if (handlers.onError) handlers.onError('WebSocket 错误'); };
+    rws.onclose = function(ev) {
+      if (_ws === rws) _ws = null;
       if (handlers.onClose) handlers.onClose(ev);
     };
-    return ws;
+    return rws;
   }
+
+  // cancelWsReconnect: 向后兼容保留，ReconnectingWebSocket 由 close() 自动停止重连
+  function cancelWsReconnect() { /* no-op: reconnecting-websocket manages reconnection internally */ }
 
   function sendMsg(botId, text, clientId) {
     if (!_ws || _ws.readyState !== 1) throw new Error('WebSocket 未连接');
@@ -780,18 +835,34 @@ var API = (function() {
     return r.json();
   }
 
-  // 重置 Token 统计 — ⚠待后端新增端点
+  // 重置 Token 统计
   async function resetAdminTokenStats() {
-    var r = await _fetch('/admin/tokens/reset', { method: 'POST' });
+    var r = await _fetch('/admin/stats/reset', { method: 'POST' });
     if (!r.ok) throw new Error(await _parseError(r));
     return r.json();
   }
 
-  // 恢复备份 — ⚠待后端新增端点
+  // 恢复备份
   async function restoreBackup(backupId) {
-    var r = await _fetch('/admin/backups/' + backupId + '/restore', { method: 'POST' });
+    var r = await _fetch('/admin/backup/' + backupId + '/restore', { method: 'POST' });
     if (!r.ok) throw new Error(await _parseError(r));
     return r.json();
+  }
+
+  // [安全] 下载备份文件（fetch + blob，避免 window.open 无鉴权）
+  async function downloadBackup(backupId, fileName) {
+    var r = await _fetch('/admin/backups/' + encodeURIComponent(backupId) + '/download');
+    if (!r.ok) throw new Error(await _parseError(r));
+    var blob = await r.blob();
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = fileName || ('backup_' + backupId);
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() { URL.revokeObjectURL(url); a.remove(); }, 100);
+    return true;
   }
 
   // ================================================================
@@ -809,7 +880,7 @@ var API = (function() {
     try {
       var ctrl = new AbortController();
       var t = setTimeout(function() { ctrl.abort(); }, 3000);
-      var r = await fetch(_apiBase() + '/auth/ping', { method: 'GET', signal: ctrl.signal });
+      var r = await fetch(_apiBase() + '/health', { method: 'GET', signal: ctrl.signal });
       clearTimeout(t);
       return r.ok;
     } catch (e) { return false; }
@@ -840,7 +911,7 @@ var API = (function() {
     listMessages: listMessages, searchMessages: searchMessages,
     recallMessage: recallMessage, deleteMessage: deleteMessage, reportMessage: reportMessage,
     // ws
-    openChatWs: openChatWs, sendMsg: sendMsg, closeChatWs: closeChatWs, wsReady: wsReady,
+    openChatWs: openChatWs, sendMsg: sendMsg, closeChatWs: closeChatWs, cancelWsReconnect: cancelWsReconnect, wsReady: wsReady,
     newClientId: newClientId,
     // dashboard
     getDashboard: getDashboard, getBotDashboard: getBotDashboard,
@@ -874,6 +945,7 @@ var API = (function() {
     getAdminLogs: getAdminLogs, getAdminBackups: getAdminBackups,
     createBackup: createBackup, getAdminMetrics: getAdminMetrics,
     resetAdminTokenStats: resetAdminTokenStats, restoreBackup: restoreBackup,
+    downloadBackup: downloadBackup,
     // app
     getAppVersion: getAppVersion,
     // token / state

@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="shared/base.css">
 <link rel="stylesheet" href="shared/components.css">
 <link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/dark-mode.css">
 <link rel="stylesheet" href="shared/effects.css">
 <style>
 /* ===== 我的Bot — 页面专属样式 ===== */
@@ -71,7 +70,7 @@
 </style>
 </head>
 <body>
-<div class="phone">
+<div class="phone" data-emotion="3">
   <div class="title-bar">
     <span class="title">Bot管理</span>
     <button class="add-btn" onclick="location.href='Bot创建向导.html'" title="新建 Bot">
@@ -120,49 +119,69 @@
       return;
     }
 
+    // [安全] 用 data-* 属性代替 onclick 拼接，避免 XSS
     container.innerHTML = bots.map(function(b, i) {
       var colorCls = AVATAR_COLORS[i % 3];
       var personaLabel = PERSONA_LABELS[b.personality] || b.personality || '';
       var avatarFile = PERSONA_AVATARS[b.personality] || 'agnes-cat.png';
       var status = computeBotStatus(b);
       var isActive = status.online;
-      var statusReason = status.reason;
       var fallbackAvatar = 'shared/' + avatarFile;
-      var avatarHtml = b.avatar_url
-        ? '<img src="' + _resolveUrl(b.avatar_url) + '" alt="Bot" style="width:52px;height:52px;border-radius:50%;object-fit:cover;" onerror="this.onerror=null;this.src=\'' + fallbackAvatar + '\'">'
-        : '<div class="img-cat avatar img-md"><img src="' + fallbackAvatar + '" alt="猫娘"></div>';
-      console.log('[BotList] bot=' + b.name + ' avatar_url=' + JSON.stringify(b.avatar_url) + ' resolved=' + (b.avatar_url ? _resolveUrl(b.avatar_url) : 'N/A') + ' is_active=' + b.is_active);
-
+      // [安全] 图片 URL 用占位符，后续用 createElement 安全赋值
+      var avatarPlaceholder = b.avatar_url ? 'data-avatar-url="' + escapeHtml(b.avatar_url) + '"' : '';
       var statusText = isActive ? '运行中' : '已停用';
 
       return '<div class="bot-card-wrap" style="position:relative;overflow:hidden;margin-bottom:10px;">' +
         '<div class="swipe-actions" style="position:absolute;right:0;top:0;bottom:0;display:none;align-items:center;gap:4px;padding-right:12px;background:linear-gradient(90deg,transparent,#FFF0F3);z-index:0;">' +
-          '<button onclick="event.stopPropagation();location.href=\'Bot设置.html?bot_id=' + b.id + '\'" style="width:36px;height:36px;border-radius:50%;border:none;background:#C4B5FD;color:#fff;font-size:14px;cursor:pointer;">⚙</button>' +
-          '<button onclick="event.stopPropagation();confirmDelete(' + b.id + ',\'' + _esc(b.name) + '\')" style="width:36px;height:36px;border-radius:50%;border:none;background:#FF6B7A;color:#fff;font-size:14px;cursor:pointer;">✕</button>' +
+          '<button class="swipe-settings-btn" data-bot-id="' + parseInt(b.id, 10) + '" style="width:36px;height:36px;border-radius:50%;border:none;background:#C4B5FD;color:#fff;font-size:14px;cursor:pointer;">⚙</button>' +
+          '<button class="swipe-delete-btn" data-bot-id="' + parseInt(b.id, 10) + '" data-bot-name="' + escapeHtml(b.name) + '" style="width:36px;height:36px;border-radius:50%;border:none;background:#FF6B7A;color:#fff;font-size:14px;cursor:pointer;">✕</button>' +
         '</div>' +
-        '<div class="bot-card' + (isActive ? '' : ' offline') + '" onclick="goChat(' + b.id + ')" data-bot-id="' + b.id + '" style="position:relative;z-index:1;background:rgba(255,255,255,0.8);transition:transform 0.25s ease;">' +
-          '<div class="bot-avatar ' + colorCls + '">' + avatarHtml + '</div>' +
+        '<div class="bot-card' + (isActive ? '' : ' offline') + '" data-bot-id="' + parseInt(b.id, 10) + '" ' + avatarPlaceholder + ' data-fallback="' + escapeHtml(fallbackAvatar) + '" style="position:relative;z-index:1;background:rgba(255,255,255,0.8);transition:transform 0.25s ease;">' +
+          '<div class="bot-avatar ' + colorCls + '">' +
+            (b.avatar_url
+              ? '<span class="avatar-img-slot" data-url="' + escapeHtml(b.avatar_url) + '" data-fallback="' + escapeHtml(fallbackAvatar) + '"></span>'
+              : '<div class="img-cat avatar img-md"><img src="' + fallbackAvatar + '" alt="猫娘"></div>') +
+          '</div>' +
           '<div class="bot-info">' +
-            '<div class="bot-name">' + _esc(b.name) + '</div>' +
-            '<div class="bot-persona">' + _esc(personaLabel) + '</div>' +
+            '<div class="bot-name">' + escapeHtml(b.name) + '</div>' +
+            '<div class="bot-persona">' + escapeHtml(personaLabel) + '</div>' +
             '<div class="bot-meta"><span>今日 ' + (b.today_count || 0) + ' 条</span><span>Lv.' + (b.level || 0) + '</span></div>' +
           '</div>' +
           '<div class="bot-status"><span class="status-dot ' + (isActive ? 'online' : 'offline') + '"></span>' + statusText + '</div>' +
         '</div>' +
       '</div>';
     }).join('');
-  }
 
-  function _esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+    // [安全] 用 createElement 安全设置图片 src（避免 innerHTML 拼接 URL）
+    container.querySelectorAll('.avatar-img-slot').forEach(function(slot) {
+      var url = _resolveUrl(slot.getAttribute('data-url'));
+      var fallback = slot.getAttribute('data-fallback');
+      var img = _safeCreateImg(url, 'Bot', fallback);
+      img.style.cssText = 'width:52px;height:52px;border-radius:50%;object-fit:cover;';
+      slot.appendChild(img);
+    });
 
-  // 补全服务器URL前缀
-  function _resolveUrl(url) {
-    if (!url) return '';
-    if (url.indexOf('http') === 0 || url.indexOf('data:') === 0) return url;
-    var base = (window.APP_CONFIG && window.APP_CONFIG.server_base) || '';
-    if (base && url.charAt(0) === '/') return base + url;
-    if (base) return base + '/' + url;
-    return url;
+    // [安全] 事件委托：左滑按钮用 data-* 属性触发，不在 HTML 中拼接 onclick
+    container.querySelectorAll('.swipe-settings-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        location.href = 'Bot设置.html?bot_id=' + this.getAttribute('data-bot-id');
+      });
+    });
+    container.querySelectorAll('.swipe-delete-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var botId = this.getAttribute('data-bot-id');
+        var botName = this.getAttribute('data-bot-name');
+        confirmDelete(parseInt(botId, 10), botName);
+      });
+    });
+    // Bot 卡片点击跳转聊天
+    container.querySelectorAll('.bot-card[data-bot-id]').forEach(function(card) {
+      card.addEventListener('click', function() {
+        goChat(parseInt(this.getAttribute('data-bot-id'), 10));
+      });
+    });
   }
 
   // D1：左滑手势 — 渲染后绑定（先重置所有滑动状态避免事件累积）
@@ -210,8 +229,7 @@
     bindSwipe();
   }).catch(function(err) {
     var msg = err.message || '网络错误';
-    console.error('[BotList] load error:', msg, err);
-    document.getElementById('botList').innerHTML = '<div class="empty-state"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C0A0B0" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="title">加载失败</div><div class="desc">' + _esc(msg) + '<br>请检查网络连接或后端服务状态</div><button onclick="location.reload()" style="border:none;border-radius:14px;padding:10px 24px;background:#F472B6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">重试</button></div>';
+    document.getElementById('botList').innerHTML = '<div class="empty-state"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C0A0B0" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="title">加载失败</div><div class="desc">' + escapeHtml(msg) + '<br>请检查网络连接或后端服务状态</div><button onclick="location.reload()" style="border:none;border-radius:14px;padding:10px 24px;background:#F472B6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">重试</button></div>';
   });
 
   // 聊天

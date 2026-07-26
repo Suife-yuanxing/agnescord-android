@@ -140,6 +140,66 @@ body {
   padding-top: 48px;
 }
 
+/* ================================================================
+   SPA Shell — 单页应用容器 + 转场动画
+   ================================================================ */
+
+/* SPA 视图容器 — 占据 phone 的中间区域（title-bar 和 bottom-nav 之间） */
+.spa-shell {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 单个视图层 — 绝对定位覆盖整个 shell */
+.spa-view {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity, transform;
+  /* 默认转场：淡入淡出（Tab 切换） */
+  transition: opacity 200ms ease, transform 300ms var(--ease-push, cubic-bezier(0.25, 0.1, 0.25, 1));
+}
+.spa-view.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+/* 转场：淡入淡出（Tab 切换，默认） */
+.spa-view.fade-enter  { opacity: 0; }
+.spa-view.fade-leave  { opacity: 0; }
+
+/* 转场：右推入（进入子页面） */
+.spa-view.push-right-enter {
+  transform: translateX(100%);
+  transition: opacity 200ms ease, transform 300ms var(--ease-push);
+}
+.spa-view.push-right-leave {
+  transform: translateX(-30%);
+  opacity: 0.5;
+  transition: opacity 200ms ease, transform 300ms var(--ease-push);
+}
+
+/* 转场：左推入（返回） */
+.spa-view.push-left-enter {
+  transform: translateX(-100%);
+  transition: opacity 200ms ease, transform 300ms var(--ease-push);
+}
+.spa-view.push-left-leave {
+  transform: translateX(30%);
+  opacity: 0.5;
+  transition: opacity 200ms ease, transform 300ms var(--ease-push);
+}
+
+/* SPA 模式下的 scroll-area — 每个视图自己管理滚动 */
+.spa-view .scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 /* === Reduced Motion === */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

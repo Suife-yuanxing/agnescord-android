@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="shared/tokens.css">
 <link rel="stylesheet" href="shared/base.css">
 <link rel="stylesheet" href="shared/components.css">
-<link rel="stylesheet" href="shared/dark-mode.css">
 <link rel="stylesheet" href="shared/effects.css">
 <style>
 /* ===== 用量明细 — 页面专属样式 ===== */
@@ -113,7 +112,7 @@
 </style>
 </head>
 <body>
-<div class="phone">
+<div class="phone" data-emotion="1">
   <div class="title-bar">
     <a class="back" href="API Key管理.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -182,6 +181,7 @@
   <div class="toast" id="toast"></div>
 </div>
 
+<script src="shared/native.js"></script>
 <script src="shared/config.js"></script>
 <script src="shared/api.js"></script>
 <script src="shared/app.js"></script>
@@ -330,7 +330,8 @@ function loadEndpoints() {
   });
 }
 
-function _esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+// [安全] 统一使用全局 escapeHtml
+function _esc(s) { return escapeHtml(s); }
 
 if (API.isLoggedIn()) {
   loadData();

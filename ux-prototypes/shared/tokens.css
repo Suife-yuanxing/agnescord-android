@@ -1,10 +1,11 @@
-/* ===== 林念念 Bot — Design Tokens v3 ===== */
-/* 第四版马卡龙色系 × LINE贴纸美学 × Claymorphism */
+/* ===== 林念念 Bot — Design Tokens v4 ===== */
+/* Soft Glass × 情感浓度梯度 × 品牌化设计系统 */
 
 /*
- * 设计来源：Agnes AI gen_01-04 参考图 + agnes_req.json 提示词
- * 角色特征：浅灰背景 / 婴儿蓝发 / 软粉腮红 / 薰衣草点缀 / 薄荷绿口音
- * 情绪导向：治愈 / 温柔 / 轻快 / 卡哇伊
+ * 视觉范式：Soft Glass（进化版玻璃拟态），从 Claymorphism 进化为"轻盈水雾"
+ * 情感浓度：通过 data-emotion="1~5" 控制 5 档视觉表现强度
+ * 品牌核心：#F472B6 + 猫娘IP + 婴儿蓝 + 薰衣草紫
+ * 设计来源：Agnes AI gen_01-04 参考图 + UI重构完整实施方案
  */
 
 :root {
@@ -58,11 +59,11 @@
   /* === Body Gradient — 浅灰中性 === */
   --body-gradient: linear-gradient(150deg, #F0F0F0 0%, #E8E8E8 25%, #F0F0F5 50%, #EDEDF0 75%, #F0F0F0 100%);
 
-  /* === Card === */
-  --card-bg: rgba(255, 255, 255, 0.75);
-  --card-blur: blur(10px);
-  --card-border: 1.5px solid rgba(255, 255, 255, 0.7);
-  --card-shadow: 0 3px 12px rgba(100, 100, 120, 0.06);
+  /* === Card / Soft Glass（默认值 = emotion 3 中档）=== */
+  --card-bg: rgba(255, 255, 255, 0.72);
+  --card-blur: blur(8px);
+  --card-border: 1.5px solid rgba(255, 255, 255, 0.6);
+  --card-shadow: 0 3px 12px rgba(244, 114, 182, 0.06);
 
   /* === Gradients === */
   --gradient-primary: linear-gradient(135deg, #F472B6, #F9A8D4);
@@ -83,13 +84,13 @@
   --radius-2xl: 32px;
   --radius-full: 50%;
 
-  /* === Shadows — 中性灰调 === */
-  --shadow-phone: 0 20px 60px rgba(100, 100, 120, 0.15), 0 0 0 3px rgba(255, 255, 255, 0.5);
+  /* === Shadows — 品牌色投影替代灰调 === */
+  --shadow-phone: 0 20px 60px rgba(244, 114, 182, 0.1), 0 0 0 3px rgba(255, 255, 255, 0.5);
   --shadow-btn: 0 6px 20px rgba(244, 114, 182, 0.25);
   --shadow-btn-hover: 0 6px 24px rgba(244, 114, 182, 0.4);
-  --shadow-card: 0 3px 12px rgba(100, 100, 120, 0.06);
-  --shadow-card-hover: 0 4px 16px rgba(100, 100, 120, 0.1);
-  --shadow-float: 0 4px 14px rgba(100, 100, 120, 0.2);
+  --shadow-card: 0 3px 12px rgba(244, 114, 182, 0.06);
+  --shadow-card-hover: 0 4px 16px rgba(244, 114, 182, 0.12);
+  --shadow-float: 0 4px 14px rgba(244, 114, 182, 0.15);
 
   /* === Spacing === */
   --space-xs: 4px;
@@ -131,6 +132,7 @@
 
 /* === Dark Mode Token Overrides === */
 .phone.dark-mode {
+  background: #1A1A2E; /* dark-mode.css L5 迁移 */
   --bg-page: var(--bg-dark);
   /* In dark mode, shift primary one step lighter for readability against dark backgrounds */
   --color-primary: #F9A8D4;
@@ -141,6 +143,7 @@
   --color-primary-border: rgba(249, 168, 212, 0.2);
   --color-primary-shadow: rgba(249, 168, 212, 0.3);
   --card-bg: var(--bg-dark-card);
+  --card-blur: blur(6px);
   --card-border: 1.5px solid rgba(255, 255, 255, 0.06);
   --card-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
   --text-primary: var(--text-dark-primary);
@@ -148,6 +151,117 @@
   --text-muted: var(--text-dark-muted);
   --input-border: 1.5px solid rgba(255, 255, 255, 0.08);
   --shadow-phone: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(255, 255, 255, 0.1);
+  --shadow-card: 0 3px 12px rgba(0, 0, 0, 0.15);
+  --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --shadow-float: 0 4px 14px rgba(0, 0, 0, 0.25);
+  /* 暗黑模式 emotion 梯度（降低装饰浓度） */
+  --emotion-decor-opacity: 0.5;
+}
+/* dark-mode.css L6 迁移：暗黑模式 title-bar 渐变反转 */
+.phone.dark-mode .title-bar { background: linear-gradient(135deg, #F9A8D4, #F472B6); }
+
+/* ============================================================
+ *  情感浓度梯度 — data-emotion="1~5"
+ *  控制 Soft Glass 透明度/模糊度/装饰密度/圆角/阴影
+ *  5/5 = 最高装饰（启动页/聊天页）
+ *  1/5 = 最低装饰（数据面板/管理员/API Key）
+ * ============================================================ */
+
+/* ── Emotion 5/5: 启动页 / 聊天页 — 高透明度 + 强blur + 光球 + 花瓣 + 品牌色投影 ── */
+.phone[data-emotion="5"] {
+  --emotion-glass-bg: rgba(255, 255, 255, 0.45);
+  --emotion-glass-blur: blur(16px);
+  --emotion-glass-border: 1.5px solid rgba(255, 255, 255, 0.55);
+  --emotion-radius: 22px;
+  --emotion-shadow: 0 4px 24px rgba(244, 114, 182, 0.15);
+  --emotion-decor-opacity: 1;
+  --emotion-orb-count: 3;
+  --emotion-card-blur: blur(12px);
+}
+
+/* ── Emotion 4/5: 首页仪表盘 / 我的 — 中高装饰 ── */
+.phone[data-emotion="4"] {
+  --emotion-glass-bg: rgba(255, 255, 255, 0.55);
+  --emotion-glass-blur: blur(12px);
+  --emotion-glass-border: 1.5px solid rgba(255, 255, 255, 0.6);
+  --emotion-radius: 20px;
+  --emotion-shadow: 0 4px 20px rgba(244, 114, 182, 0.1);
+  --emotion-decor-opacity: 0.7;
+  --emotion-orb-count: 2;
+  --emotion-card-blur: blur(10px);
+}
+
+/* ── Emotion 3/5: Bot管理 / 创建向导 / 通知 — 适度装饰 ── */
+.phone[data-emotion="3"] {
+  --emotion-glass-bg: rgba(255, 255, 255, 0.65);
+  --emotion-glass-blur: blur(8px);
+  --emotion-glass-border: 1.5px solid rgba(255, 255, 255, 0.65);
+  --emotion-radius: 18px;
+  --emotion-shadow: 0 3px 16px rgba(244, 114, 182, 0.08);
+  --emotion-decor-opacity: 0.4;
+  --emotion-orb-count: 1;
+  --emotion-card-blur: blur(8px);
+}
+
+/* ── Emotion 2/5: 设置 / 编辑个人资料 — 极简装饰 ── */
+.phone[data-emotion="2"] {
+  --emotion-glass-bg: rgba(255, 255, 255, 0.78);
+  --emotion-glass-blur: blur(4px);
+  --emotion-glass-border: 1.5px solid rgba(255, 255, 255, 0.7);
+  --emotion-radius: 16px;
+  --emotion-shadow: 0 3px 12px rgba(100, 100, 120, 0.06);
+  --emotion-decor-opacity: 0;
+  --emotion-orb-count: 0;
+  --emotion-card-blur: blur(4px);
+}
+
+/* ── Emotion 1/5: 数据面板 / 管理员 / API Key — 无装饰纯功能 ── */
+.phone[data-emotion="1"] {
+  --emotion-glass-bg: rgba(255, 255, 255, 0.88);
+  --emotion-glass-blur: blur(0);
+  --emotion-glass-border: 1.5px solid rgba(220, 220, 230, 0.5);
+  --emotion-radius: 14px;
+  --emotion-shadow: 0 2px 8px rgba(100, 100, 120, 0.08);
+  --emotion-decor-opacity: 0;
+  --emotion-orb-count: 0;
+  --emotion-card-blur: blur(0);
+}
+
+/* ── 暗黑模式 emotion 梯度覆盖 ── */
+.phone.dark-mode[data-emotion="5"] {
+  --emotion-glass-bg: rgba(22, 33, 62, 0.6);
+  --emotion-glass-blur: blur(16px);
+  --emotion-glass-border: 1.5px solid rgba(255, 255, 255, 0.08);
+  --emotion-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  --emotion-card-blur: blur(12px);
+}
+.phone.dark-mode[data-emotion="4"] {
+  --emotion-glass-bg: rgba(22, 33, 62, 0.7);
+  --emotion-glass-blur: blur(12px);
+  --emotion-glass-border: 1.5px solid rgba(255, 255, 255, 0.07);
+  --emotion-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+  --emotion-card-blur: blur(10px);
+}
+.phone.dark-mode[data-emotion="3"] {
+  --emotion-glass-bg: rgba(22, 33, 62, 0.78);
+  --emotion-glass-blur: blur(8px);
+  --emotion-glass-border: 1.5px solid rgba(255, 255, 255, 0.06);
+  --emotion-shadow: 0 3px 16px rgba(0, 0, 0, 0.15);
+  --emotion-card-blur: blur(8px);
+}
+.phone.dark-mode[data-emotion="2"] {
+  --emotion-glass-bg: rgba(22, 33, 62, 0.85);
+  --emotion-glass-blur: blur(4px);
+  --emotion-glass-border: 1.5px solid rgba(255, 255, 255, 0.06);
+  --emotion-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+  --emotion-card-blur: blur(4px);
+}
+.phone.dark-mode[data-emotion="1"] {
+  --emotion-glass-bg: rgba(22, 33, 62, 0.92);
+  --emotion-glass-blur: blur(0);
+  --emotion-glass-border: 1.5px solid rgba(255, 255, 255, 0.04);
+  --emotion-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --emotion-card-blur: blur(0);
 }
 
 /* === Global Font Size Scale === */
@@ -163,3 +277,53 @@
  */
 .phone[data-font-size="小"] .scroll-area { zoom: 0.88; }
 .phone[data-font-size="大"] .scroll-area { zoom: 1.12; }
+
+/* ============================================================
+ *  Phase 2: 心情情境化适配 (Mood-Contextual Theming)
+ *  A+A: 浅色 + 高兴 → 更明亮暖调
+ *  B+B: 深色 + 困倦 → 更深沉冷调
+ *  通过 data-mood 属性与主题组合微调 CSS 变量
+ * ============================================================ */
+
+/* ── Light Mode Mood Overrides ── */
+.phone[data-mood="happy"]:not(.dark-mode) {
+  --gradient-header: linear-gradient(135deg, #F472B6 0%, #FFB0C0 100%);
+  --shadow-card: 0 3px 14px rgba(244, 114, 182, 0.1);
+}
+.phone[data-mood="excited"]:not(.dark-mode) {
+  --gradient-header: linear-gradient(135deg, #FF8095 0%, #FFB347 100%);
+  --shadow-card: 0 3px 16px rgba(255, 179, 71, 0.12);
+}
+.phone[data-mood="sleepy"]:not(.dark-mode) {
+  --gradient-header: linear-gradient(135deg, #C4B5FD 0%, #ADD8E6 100%);
+  --card-bg: rgba(245, 245, 255, 0.72);
+}
+.phone[data-mood="missing"]:not(.dark-mode) {
+  --gradient-header: linear-gradient(135deg, #ADD8E6 0%, #C4B5FD 100%);
+}
+.phone[data-mood="celebrate"]:not(.dark-mode) {
+  --gradient-header: linear-gradient(135deg, #FFB347 0%, #F472B6 50%, #C4B5FD 100%);
+  --shadow-card: 0 4px 18px rgba(244, 114, 182, 0.15);
+}
+
+/* ── Dark Mode Mood Overrides ── */
+.phone.dark-mode[data-mood="happy"] {
+  --gradient-header: linear-gradient(135deg, #F9A8D4, #FFB0C0);
+  --card-bg: rgba(26, 33, 62, 0.72);
+}
+.phone.dark-mode[data-mood="excited"] {
+  --gradient-header: linear-gradient(135deg, #FF8095, #FFB347);
+  --bg-page: #1E1E34;
+}
+.phone.dark-mode[data-mood="sleepy"] {
+  --gradient-header: linear-gradient(135deg, #8B7EC8, #6B8DB6);
+  --bg-page: #161628;
+  --card-bg: rgba(18, 26, 50, 0.82);
+}
+.phone.dark-mode[data-mood="missing"] {
+  --gradient-header: linear-gradient(135deg, #8BC4D6, #A78BFA);
+}
+.phone.dark-mode[data-mood="celebrate"] {
+  --gradient-header: linear-gradient(135deg, #FFB347, #F9A8D4, #C4B5FD);
+  --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.25);
+}

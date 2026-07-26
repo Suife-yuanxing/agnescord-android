@@ -52,3 +52,44 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
+
+/* === Festival Banner (Phase 2) === */
+.festival-banner {
+  margin: 8px 20px; padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(255,224,232,0.9), rgba(255,212,220,0.9));
+  border-radius: 14px; display: flex; align-items: center; gap: 10px;
+  border: 1.5px solid rgba(244,114,182,0.2);
+  animation: festival-glow 2s ease-in-out infinite;
+}
+.phone.dark-mode .festival-banner {
+  background: linear-gradient(135deg, rgba(42,26,46,0.9), rgba(30,26,46,0.9));
+  border-color: rgba(244,114,182,0.15);
+}
+.festival-emoji { font-size: 24px; }
+.festival-text { font-size: 13px; font-weight: 700; color: #3A2030; }
+.phone.dark-mode .festival-text { color: #E0D8E8; }
+@keyframes festival-glow {
+  0%, 100% { box-shadow: 0 2px 12px rgba(244,114,182,0.1); }
+  50% { box-shadow: 0 4px 20px rgba(244,114,182,0.25); }
+}
+
+/* === Performance-Aware CSS Rules (Phase 2) === */
+/* Disable animations based on data-perf attributes */
+.phone[data-perf-ripple="0"] .ripple { display: none !important; }
+.phone[data-perf-petals="0"] .petal { display: none !important; }
+.phone[data-perf-nav="0"] .nav-capsule,
+.phone[data-perf-nav="0"] .nav-capsule-trail { transition: none !important; }
+.phone[data-perf-transition="0"] .spa-view { transition: none !important; animation: none !important; }
+.phone[data-perf-mood="0"] .img-cat { animation: none !important; }
+.phone[data-perf-mood="0"] .img-cat img { transition: none !important; }
+.phone[data-perf-festival="0"] .festival-banner { animation: none !important; }
+.phone[data-perf-typing="0"] .typing-dots span { animation: none !important; opacity: 0.5; }
+
+/* Respect OS-level reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

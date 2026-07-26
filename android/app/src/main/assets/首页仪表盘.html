@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="shared/base.css">
 <link rel="stylesheet" href="shared/components.css">
 <link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/dark-mode.css">
 <link rel="stylesheet" href="shared/effects.css">
 <script src="shared/native.js"></script>
 <style>
@@ -194,7 +193,7 @@
 </head>
 <body>
 
-<div class="phone" id="phoneFrame">
+<div class="phone" id="phoneFrame" data-emotion="4">
   <div class="top-bar">
     <div>
       <div class="greeting">下午好</div>
@@ -357,17 +356,8 @@
 (function() {
   'use strict';
 
-  function _e(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-  // 补全服务器URL前缀
-  function _resolveUrl(url) {
-    if (!url) return '';
-    if (url.indexOf('http') === 0 || url.indexOf('data:') === 0) return url;
-    var base = (window.APP_CONFIG && window.APP_CONFIG.server_base) || '';
-    if (base && url.charAt(0) === '/') return base + url;
-    if (base) return base + '/' + url;
-    return url;
-  }
+  // [安全] _e 和 _resolveUrl 已由 app.js 全局提供
+  function _e(s) { return escapeHtml(s); }
 
   // ── 加载仪表盘数据（未登录则显示空态）──
   API.getDashboard().then(function(d) {
@@ -388,17 +378,22 @@
       var isBotActive = b.is_active !== false;
       var statusLabel = isBotActive ? '运行中' : '已停用';
       var statusColor = isBotActive ? '#4CAF50' : '#B0A0B0';
-      console.log('[Dashboard] bot=' + b.name + ' avatar_url=' + JSON.stringify(b.avatar_url) + ' is_active=' + b.is_active);
+      // [安全] 图片 URL 用 createElement 安全设置，避免 innerHTML 拼接
       botCard.innerHTML = '<div class="row">' +
         '<div class="bot-info">' +
-          '<div class="bot-avatar"><div class="img-cat avatar img-md"><img src="' + avatarSrc + '" alt="Bot" onerror="this.onerror=null;this.src=\'' + fallbackSrc + '\'">' +
+          '<div class="bot-avatar"><div class="img-cat avatar img-md"><span class="avatar-img-slot"></span>' +
           '</div></div>' +
-          '<div><div class="bot-name">' + _e(b.name || 'Bot') + '</div>' +
-          '<div class="bot-persona">' + _e(personaText) + (isBotActive ? ' · 活跃' : '') + '</div>' +
+          '<div><div class="bot-name">' + escapeHtml(b.name || 'Bot') + '</div>' +
+          '<div class="bot-persona">' + escapeHtml(personaText) + (isBotActive ? ' · 活跃' : '') + '</div>' +
           '<div class="bot-status" id="dashBotStatus"><span style="color:' + statusColor + ';">●</span> ' + statusLabel + '</div></div>' +
         '</div>' +
         '<button class="switch-btn" onclick="event.stopPropagation();location.href=\'我的Bot.html\'">\u5207\u6362</button>' +
         '</div>';
+      var imgSlot = botCard.querySelector('.avatar-img-slot');
+      if (imgSlot) {
+        var img = _safeCreateImg(avatarSrc, 'Bot', fallbackSrc);
+        imgSlot.appendChild(img);
+      }
       API.setCurrentBotId(b.id);
       botCard.onclick = function() { location.href = '聊天页.html?bot_id=' + b.id; };
     } else {

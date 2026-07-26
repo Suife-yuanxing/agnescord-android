@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="shared/base.css">
 <link rel="stylesheet" href="shared/components.css">
 <link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/dark-mode.css">
 <link rel="stylesheet" href="shared/effects.css">
 <style>
 /* ===== 数据面板 — 页面专属样式 ===== */
@@ -184,10 +183,31 @@ body { background-attachment: fixed; overflow-x: hidden; }
 .phone.dark-mode .know-tag { background: rgba(244, 114, 182,0.08); }
 .phone.dark-mode .achieve-item { background: #16213E; border-color: rgba(255,255,255,0.06); }
 .phone.dark-mode .achieve-item .ach-name { color: #C0B8D0; }
+
+/* ── 渐进披露 (Phase 2) ── */
+.progressive-section {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.5s ease;
+}
+.progressive-section.expanded { max-height: 2000px; }
+.progressive-toggle {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  margin: 12px 20px; padding: 10px; border-radius: 12px;
+  background: rgba(255,255,255,0.5); border: 1.5px dashed rgba(244,114,182,0.2);
+  cursor: pointer; font-size: 13px; font-weight: 600; color: #B090A0;
+  font-family: inherit; transition: all 0.25s;
+}
+.progressive-toggle:hover { background: rgba(255,255,255,0.8); color: #F472B6; }
+.phone.dark-mode .progressive-toggle {
+  background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.06); color: #9088A0;
+}
+.phone.dark-mode .progressive-toggle:hover { color: #F9A8D4; }
+.progressive-toggle svg { width: 16px; height: 16px; transition: transform 0.3s; }
+.progressive-toggle.open svg { transform: rotate(180deg); }
 </style>
 </head>
 <body>
-<div class="phone">
+<div class="phone" data-emotion="1">
   <!-- 标题栏 -->
   <div class="title-bar">
     <span class="title">我的数据</span>
@@ -282,6 +302,13 @@ body { background-attachment: fixed; overflow-x: hidden; }
       </div>
     </div>
 
+    <!-- 渐进披露：核心数据流保持可见，低频模块折叠 (Phase 2) -->
+    <button class="progressive-toggle" id="progressiveToggle" onclick="toggleProgressive(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      展开更多数据
+    </button>
+    <div class="progressive-section" id="progressiveSection">
+
     <!-- 互动时段 -->
     <div class="chart-card">
       <div class="chart-title">你常找小咪的时间<span class="chart-subtitle">近30天</span></div>
@@ -333,6 +360,7 @@ body { background-attachment: fixed; overflow-x: hidden; }
       <div id="searchResults" style="max-height:200px;overflow-y:auto;"></div>
     </div>
     <div style="height:20px;"></div>
+    </div><!-- /progressive-section -->
   </div>
 
   <!-- 底部导航 -->
@@ -371,7 +399,8 @@ if (API.isLoggedIn()) {
     } else { loadAllData(); }
   }
 
-  function _esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  // [安全] 统一使用全局 escapeHtml
+  function _esc(s) { return escapeHtml(s); }
 
   function animateKPI(el, target) {
     if (!el || target === undefined) return;
@@ -577,6 +606,38 @@ if (API.isLoggedIn()) {
       });
     };
   }
+
+  // ── Progressive Disclosure Toggle (Phase 2) ──
+  var _progKey = 'data_progressive_open';
+  window.toggleProgressive = function(btn) {
+    var section = document.getElementById('progressiveSection');
+    if (!section) return;
+    var isOpen = section.classList.toggle('expanded');
+    btn.classList.toggle('open', isOpen);
+    // Update button text
+    var spans = btn.querySelectorAll('span');
+    var textNode = spans.length > 1 ? spans[spans.length - 1] : btn.lastChild;
+    if (textNode && textNode.nodeType === 3) {
+      textNode.textContent = isOpen ? ' 收起' : ' 展开更多数据';
+    }
+    try { localStorage.setItem(_progKey, isOpen ? '1' : '0'); } catch(e) {}
+  };
+  // Restore progressive state on load
+  (function() {
+    try {
+      var isOpen = localStorage.getItem(_progKey) === '1';
+      if (isOpen) {
+        var section = document.getElementById('progressiveSection');
+        var btn = document.getElementById('progressiveToggle');
+        if (section) section.classList.add('expanded');
+        if (btn) {
+          btn.classList.add('open');
+          var textNode = btn.lastChild;
+          if (textNode && textNode.nodeType === 3) textNode.textContent = ' 收起';
+        }
+      }
+    } catch(e) {}
+  })();
 
   loadStats();
 }
