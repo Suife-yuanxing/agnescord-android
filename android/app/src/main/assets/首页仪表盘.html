@@ -317,38 +317,6 @@
   </div>
 </div>
 
-<script>
-// ===== 聊天背景全局同步 =====
-(function() {
-  var CHAT_BG_KEY = 'chatBg';
-  function applyBg(bgData) {
-    var phone = document.getElementById('phoneFrame');
-    if (!phone) return;
-    phone.style.background = '';
-    if (!bgData || bgData.type === 'default') {
-      if (!phone.classList.contains('dark-mode')) phone.style.background = '#FFF5F7';
-    } else if (bgData.type === 'custom' && bgData.value) {
-      phone.style.background = 'url(' + bgData.value + ') center/cover no-repeat';
-    } else if (bgData.value) {
-      phone.style.background = bgData.value;
-    }
-  }
-  function loadBg() {
-    try {
-      var raw = localStorage.getItem(CHAT_BG_KEY);
-      if (!raw) return;
-      applyBg(JSON.parse(raw));
-    } catch(e) {}
-  }
-  loadBg();
-  window.addEventListener('storage', function(e) {
-    if (e.key === CHAT_BG_KEY && e.newValue) {
-      try { applyBg(JSON.parse(e.newValue)); } catch(err) {}
-    }
-  });
-})();
-</script>
-
 <script src="shared/config.js"></script>
 <script src="shared/api.js"></script>
 <script>

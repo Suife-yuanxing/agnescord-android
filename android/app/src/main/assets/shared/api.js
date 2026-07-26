@@ -112,13 +112,31 @@ var API = (function() {
     return p;
   }
 
+  // ── 全局超时配置（弱网保护）──
+  var FETCH_TIMEOUT = 15000; // 15s
+
+  function _timeoutSignal(ms) {
+    var ctrl = new AbortController();
+    var timer = setTimeout(function() { ctrl.abort(); }, ms);
+    return { signal: ctrl.signal, clear: function() { clearTimeout(timer); } };
+  }
+
   // ── fetch 封装 ──
   async function _fetch(path, options) {
     options = options || {};
     var headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
     var token = getAccessToken();
     if (token) headers['Authorization'] = 'Bearer ' + token;
-    var resp = await fetch(_apiBase() + path, Object.assign({}, options, { headers: headers }));
+    var ts = _timeoutSignal(options.timeout || FETCH_TIMEOUT);
+    var resp;
+    try {
+      resp = await fetch(_apiBase() + path, Object.assign({}, options, { headers: headers, signal: ts.signal }));
+    } catch (e) {
+      ts.clear();
+      if (e.name === 'AbortError') throw new Error('请求超时，请检查网络');
+      throw new Error('网络错误: ' + (e.message || '无法连接服务器'));
+    }
+    ts.clear();
     // 401 → 尝试刷新一次重试
     if (resp.status === 401 && !options._retried) {
       // 无 token 的请求（登录/注册）→ 直接返回 resp，让调用方解析真实错误
@@ -144,7 +162,16 @@ var API = (function() {
     var headers = Object.assign({}, options.headers || {});
     var token = getAccessToken();
     if (token) headers['Authorization'] = 'Bearer ' + token;
-    var resp = await fetch(_apiBase() + path, Object.assign({}, options, { method: 'POST', headers: headers, body: formData }));
+    var ts = _timeoutSignal(options.timeout || 30000); // 上传给 30s
+    var resp;
+    try {
+      resp = await fetch(_apiBase() + path, Object.assign({}, options, { method: 'POST', headers: headers, body: formData, signal: ts.signal }));
+    } catch (e) {
+      ts.clear();
+      if (e.name === 'AbortError') throw new Error('上传超时，请检查网络');
+      throw new Error('网络错误: ' + (e.message || '无法连接服务器'));
+    }
+    ts.clear();
     if (resp.status === 401 && !options._retried) {
       var _tk = localStorage.getItem('access_token');
       if (!_tk) { return resp; }
