@@ -759,3 +759,60 @@
 /* Password strength */
 .phone.dark-mode .strength-bar { background: rgba(255, 255, 255, 0.08); }
 
+/* === 内联样式提取 — 公共组件类 === */
+
+/* 小型操作按钮（替代重复的 inline style） */
+.btn-action {
+  border: none; border-radius: 14px; padding: 10px 24px;
+  background: #F472B6; color: #fff;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: all 0.2s;
+}
+.btn-action:hover { background: #E85D75; }
+.btn-action:active { transform: scale(0.96); }
+
+/* Bot 列表滑动操作 */
+.bot-card-wrap { position: relative; overflow: hidden; margin-bottom: 10px; }
+.swipe-actions {
+  position: absolute; right: 0; top: 0; bottom: 0;
+  display: none; align-items: center; gap: 4px; padding-right: 12px;
+  background: linear-gradient(90deg, transparent, #FFF0F3); z-index: 0;
+}
+.swipe-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: none; color: #fff; font-size: 14px; cursor: pointer;
+  transition: transform 0.15s;
+}
+.swipe-btn:active { transform: scale(0.9); }
+.swipe-btn-settings { background: #C4B5FD; }
+.swipe-btn-delete { background: #FF6B7A; }
+
+/* 搜索栏组件 */
+.search-bar { display: flex; gap: 8px; align-items: center; }
+.search-input {
+  flex: 1; padding: 10px 14px; border-radius: 12px;
+  border: 1.5px solid rgba(244, 114, 182, 0.15);
+  font-size: 13px; font-family: inherit;
+  background: rgba(255, 255, 255, 0.8); outline: none; color: #3A2030;
+}
+.search-input:focus { border-color: rgba(244, 114, 182, 0.4); }
+.search-btn {
+  padding: 10px 16px; border-radius: 12px;
+  background: linear-gradient(135deg, #F472B6, #FFB0C0);
+  color: #fff; border: none; font-size: 13px; font-weight: 700;
+  font-family: inherit; cursor: pointer; white-space: nowrap;
+}
+.search-btn:active { transform: scale(0.96); }
+
+/* 心情图例 */
+.mood-legend { display: flex; align-items: center; gap: 8px; margin-top: 10px; justify-content: center; }
+.mood-legend-item { display: flex; align-items: center; gap: 3px; }
+.mood-legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+.mood-legend-label { font-size: 9px; color: #C0A0B0; }
+
+/* 暗色模式 — 提取组件 */
+.phone.dark-mode .search-input { background: rgba(42, 42, 62, 0.8); border-color: rgba(244, 114, 182, 0.2); color: #E0D8E8; }
+.phone.dark-mode .swipe-actions { background: linear-gradient(90deg, transparent, #1A1A2E); }
+.phone.dark-mode .mood-legend-label { color: #9080A0; }
+

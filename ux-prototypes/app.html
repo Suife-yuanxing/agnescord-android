@@ -1,21 +1,21 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>林念念 — SPA</title>
-<link rel="stylesheet" href="shared/tokens.css">
-<link rel="stylesheet" href="shared/base.css">
-<link rel="stylesheet" href="shared/components.css">
-<link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/effects.css">
-<script src="shared/native.js"></script>
+<link rel="stylesheet" href="shared/dist/tokens.css">
+<link rel="stylesheet" href="shared/dist/base.css">
+<link rel="stylesheet" href="shared/dist/components.css">
+<link rel="stylesheet" href="shared/dist/anime-cat.css">
+<link rel="stylesheet" href="shared/dist/effects.css">
+<script src="shared/dist/native.js"></script>
 <script src="shared/vendor/reconnecting-websocket.min.js"></script>
 <script src="shared/vendor/lucide.min.js"></script>
 <script src="shared/vendor/lunar.min.js"></script>
-<script src="shared/perf-settings.js"></script>
-<script src="shared/mood-engine.js"></script>
-<script src="shared/festival-system.js"></script>
+<script src="shared/dist/perf-settings.js"></script>
+<script src="shared/dist/mood-engine.js"></script>
+<script src="shared/dist/festival-system.js"></script>
 <style>
 /* ===== SPA Views — Page-Specific Styles ===== */
 /* Each view's styles are scoped by #view-{name} prefix where needed */
@@ -342,7 +342,7 @@
       <input type="file" id="botAvatarInput" accept="image/*" style="opacity:0;position:absolute;width:1px;height:1px;pointer-events:none;">
       <div class="title-bar">
         <div class="avatar-wrap">
-          <div class="img-cat avatar img-md"><img src="shared/agnes-cat.png" alt="猫娘"></div>
+          <div class="img-cat avatar img-md"><img src="shared/agnes-cat.webp" alt="猫娘"></div>
         </div>
         <div class="info">
           <div class="name">小咪</div>
@@ -380,7 +380,7 @@
       <div class="title-bar"><span class="title">我的</span></div>
       <div class="scroll-area">
         <div class="account-card" id="accountCard">
-          <div class="account-avatar" id="accountAvatar"><div class="img-cat avatar img-md"><img src="shared/agnes-cat.png" alt="猫娘"></div></div>
+          <div class="account-avatar" id="accountAvatar"><div class="img-cat avatar img-md"><img src="shared/agnes-cat.webp" alt="猫娘"></div></div>
           <div class="account-info"><div class="account-name" id="accountName">用户</div><div class="account-id">ID: --</div></div>
           <span class="account-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></span>
         </div>
@@ -496,10 +496,10 @@
 </div>
 
 <!-- ===== Scripts ===== -->
-<script src="shared/config.js"></script>
-<script src="shared/api.js"></script>
-<script src="shared/router.js"></script>
-<script src="shared/app.js"></script>
+<script src="shared/dist/config.js"></script>
+<script src="shared/dist/api.js"></script>
+<script src="shared/dist/router.js"></script>
+<script src="shared/dist/app.js"></script>
 <script>
 // ===== SPA Router 初始化 =====
 (function() {
@@ -677,7 +677,7 @@
     var mm = ('0'+t.getMinutes()).slice(-2);
     var avatarEl = document.createElement('div');
     if (isUser) { avatarEl.className = 'msg-avatar user'; avatarEl.textContent = '我'; }
-    else { avatarEl.className = 'msg-avatar bot'; avatarEl.innerHTML = '<div class="img-cat avatar img-sm"><img src="shared/agnes-cat.png" alt="Bot"></div>'; }
+    else { avatarEl.className = 'msg-avatar bot'; avatarEl.innerHTML = '<div class="img-cat avatar img-sm"><img src="shared/agnes-cat.webp" alt="Bot"></div>'; }
     row.appendChild(avatarEl);
     var bubbleDiv = document.createElement('div');
     bubbleDiv.className = isUser ? 'bubble me' : 'bubble bot';
@@ -706,7 +706,7 @@
 
     var botMsg = document.createElement('div');
     botMsg.className = 'msg-row'; botMsg.style.opacity = '0';
-    botMsg.innerHTML = '<div class="msg-avatar bot"><div class="img-cat avatar img-sm"><img src="shared/agnes-cat.png"></div></div><div class="bubble bot"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+    botMsg.innerHTML = '<div class="msg-avatar bot"><div class="img-cat avatar img-sm"><img src="shared/agnes-cat.webp"></div></div><div class="bubble bot"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
     list.appendChild(botMsg);
     requestAnimationFrame(function() { botMsg.style.transition = 'opacity 0.2s'; botMsg.style.opacity = '1'; });
     list.scrollTop = list.scrollHeight;
@@ -736,7 +736,7 @@
         var isActive = b.is_active !== false;
         var personaLabel = PERSONA_LABELS[b.personality] || b.personality || '';
         return '<div class="bot-card' + (isActive ? '' : ' offline') + '" onclick="API.setCurrentBotId(' + b.id + ');Router.navigate(\'/chat\')">' +
-          '<div class="bot-avatar ' + AVATAR_COLORS[i % 3] + '"><div class="img-cat avatar img-md"><img src="shared/agnes-cat.png" alt="Bot"></div></div>' +
+          '<div class="bot-avatar ' + AVATAR_COLORS[i % 3] + '"><div class="img-cat avatar img-md"><img src="shared/agnes-cat.webp" alt="Bot"></div></div>' +
           '<div class="bot-info"><div class="bot-name">' + escapeHtml(b.name) + '</div><div class="bot-persona">' + escapeHtml(personaLabel) + '</div>' +
           '<div class="bot-meta"><span>今日 ' + (b.today_count || 0) + ' 条</span></div></div>' +
           '<div class="bot-status"><span class="status-dot ' + (isActive ? 'online' : 'offline') + '"></span>' + (isActive ? '运行中' : '已停用') + '</div></div>';

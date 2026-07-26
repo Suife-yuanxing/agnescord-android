@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>登录页 — UI 原型</title>
-<link rel="stylesheet" href="shared/tokens.css">
-<link rel="stylesheet" href="shared/base.css">
-<link rel="stylesheet" href="shared/components.css">
-<link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/effects.css">
+<link rel="stylesheet" href="shared/dist/tokens.css">
+<link rel="stylesheet" href="shared/dist/base.css">
+<link rel="stylesheet" href="shared/dist/components.css">
+<link rel="stylesheet" href="shared/dist/anime-cat.css">
+<link rel="stylesheet" href="shared/dist/effects.css">
 <style>
 /* ===== 登录页 — 页面专属样式 ===== */
 .header { padding: 44px 14px 10px; text-align: center; }
@@ -68,7 +68,7 @@ h1 { font-size: 22px; font-weight: 800; color: #3A2030; }
 <body>
 <div class="phone" data-emotion="2">
   <div class="header">
-    <div class="img-cat hero img-md"><img src="shared/agnes-cat.png" alt="猫娘"></div>
+    <div class="img-cat hero img-md"><img src="shared/agnes-cat.webp" alt="猫娘"></div>
     <h1>欢迎回来</h1>
     <p class="greeting">登录你的林念念控制面板</p>
   </div>
@@ -120,10 +120,10 @@ h1 { font-size: 22px; font-weight: 800; color: #3A2030; }
     </div>
   </div>
 </div>
-<script src="shared/config.js"></script>
-<script src="shared/native.js"></script>
-<script src="shared/api.js"></script>
-<script src="shared/app.js"></script>
+<script src="shared/dist/config.js"></script>
+<script src="shared/dist/native.js"></script>
+<script src="shared/dist/api.js"></script>
+<script src="shared/dist/app.js"></script>
 <script>
 // 已登录 → 跳过登录页，检查有无 Bot 后跳转
 if (API.isLoggedIn()) {

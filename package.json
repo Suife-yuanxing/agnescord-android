@@ -22,5 +22,8 @@
     "lucide": "^1.21.0",
     "lunar-javascript": "^1.7.7",
     "reconnecting-websocket": "^4.4.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.3"
   }
 }

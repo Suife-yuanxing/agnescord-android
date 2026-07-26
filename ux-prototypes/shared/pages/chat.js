@@ -40,7 +40,7 @@ loadChatBg();
       personaEl.innerHTML = '<span class="dot"></span> ' + (label ? label + ' · ' + statusText : statusText);
     }
     // A6：头像 — 读 avatar_url 或按 personality 映射预设猫娘
-    var PERSONA_AVATARS = { tsundere: 'agnes-tsundere.png', gentle: 'agnes-gentle.png', sarcastic: 'agnes-sarcastic.png', energetic: 'agnes-energetic.png', emotionless: 'agnes-emotionless.png', sly: 'agnes-sly.png' };
+    var PERSONA_AVATARS = { tsundere: 'agnes-tsundere.webp', gentle: 'agnes-gentle.webp', sarcastic: 'agnes-sarcastic.webp', energetic: 'agnes-energetic.webp', emotionless: 'agnes-emotionless.webp', sly: 'agnes-sly.webp' };
     var avatarUrl = bot.avatar_url ? _resolveUrl(bot.avatar_url) : ('shared/agnes-' + (PERSONA_AVATARS[bot.personality] ? bot.personality : 'cat') + '.png');
     var fallbackAvatar = 'shared/agnes-' + (PERSONA_AVATARS[bot.personality] ? bot.personality : 'cat') + '.png';
     // [安全] 通过 .src 赋值而非 innerHTML 设置图片 URL
@@ -91,8 +91,8 @@ function appendHistoryMessage(list, m) {
     var catDiv = document.createElement('div');
     catDiv.className = 'img-cat avatar img-sm';
     var img = _safeCreateImg(
-      (window._chat && window._chat.bot && window._chat.bot.avatar_url) ? _resolveUrl(window._chat.bot.avatar_url) : 'shared/agnes-cat.png',
-      'Bot', 'shared/agnes-cat.png');
+      (window._chat && window._chat.bot && window._chat.bot.avatar_url) ? _resolveUrl(window._chat.bot.avatar_url) : 'shared/agnes-cat.webp',
+      'Bot', 'shared/agnes-cat.webp');
     catDiv.appendChild(img);
     avatarEl.appendChild(catDiv);
   }

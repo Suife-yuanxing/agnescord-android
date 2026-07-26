@@ -1,15 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>首页仪表盘 v2 — UI 原型</title>
-<link rel="stylesheet" href="shared/tokens.css">
-<link rel="stylesheet" href="shared/base.css">
-<link rel="stylesheet" href="shared/components.css">
-<link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/effects.css">
-<script src="shared/native.js"></script>
+<link rel="stylesheet" href="shared/dist/tokens.css">
+<link rel="stylesheet" href="shared/dist/base.css">
+<link rel="stylesheet" href="shared/dist/components.css">
+<link rel="stylesheet" href="shared/dist/anime-cat.css">
+<link rel="stylesheet" href="shared/dist/effects.css">
+<script src="shared/dist/native.js"></script>
 <style>
 /* ===== Page-Specific: 首页仪表盘 v2 ===== */
 
@@ -317,8 +317,8 @@
   </div>
 </div>
 
-<script src="shared/config.js"></script>
-<script src="shared/api.js"></script>
+<script src="shared/dist/config.js"></script>
+<script src="shared/dist/api.js"></script>
 <script>
 // ===== API 数据加载 — 首页仪表盘 =====
 (function() {
@@ -339,8 +339,8 @@
     var botCard = document.getElementById('dashboardBotCard');
     if (d.bots && d.bots.length > 0) {
       var b = d.bots[0];
-      var avatarSrc = b.avatar_url ? _resolveUrl(b.avatar_url) : 'shared/agnes-cat.png';
-      var fallbackSrc = 'shared/agnes-cat.png';
+      var avatarSrc = b.avatar_url ? _resolveUrl(b.avatar_url) : 'shared/agnes-cat.webp';
+      var fallbackSrc = 'shared/agnes-cat.webp';
       var personaLabels = { tsundere: '傲娇', gentle: '温柔', sarcastic: '毒舌', energetic: '元气', emotionless: '三无', sly: '腹黑' };
       var personaText = personaLabels[b.personality] || b.personality || '';
       var isBotActive = b.is_active !== false;
@@ -489,6 +489,6 @@
   })();
 })();
 </script>
-<script src="shared/app.js"></script>
+<script src="shared/dist/app.js"></script>
 </body>
 </html>
