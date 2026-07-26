@@ -180,7 +180,7 @@
           <span class="toggle-slider"></span>
         </label>
       </div>
-      <div class="setting-item" style="margin:0; border-radius:0; background:transparent; border-top:1px solid rgba(0,0,0,0.04);" onclick="var t=this.querySelector('input'); t.checked=!t.checked; t.dispatchEvent(new Event('change'))">
+      <div class="setting-item setting-item-flat" onclick="var t=this.querySelector('input'); t.checked=!t.checked; t.dispatchEvent(new Event('change'))">
         <div class="item-left">
           <div class="item-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
@@ -192,7 +192,7 @@
           <span class="toggle-slider"></span>
         </label>
       </div>
-      <div class="setting-item" style="margin:0; border-radius:0; background:transparent; border-top:1px solid rgba(0,0,0,0.04);" onclick="var t=this.querySelector('input'); t.checked=!t.checked; t.dispatchEvent(new Event('change'))">
+      <div class="setting-item setting-item-flat" onclick="var t=this.querySelector('input'); t.checked=!t.checked; t.dispatchEvent(new Event('change'))">
         <div class="item-left">
           <div class="item-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="#FFB347" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
@@ -204,7 +204,7 @@
           <span class="toggle-slider"></span>
         </label>
       </div>
-      <div class="setting-item" style="margin:0; border-radius:0; background:transparent; border-top:1px solid rgba(0,0,0,0.04);" onclick="location.href='数据面板.html'">
+      <div class="setting-item setting-item-flat" onclick="location.href='数据面板.html'">
         <div class="item-left">
           <div class="item-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg>
@@ -260,13 +260,12 @@
 function showConfirmDialog(title, desc, onConfirm, confirmText) {
   var overlay = document.createElement('div');
   overlay.className = 'confirm-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;';
-  overlay.innerHTML = '<div style="width:280px;background:#fff;border-radius:18px;padding:24px 20px 16px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.15);">' +
-    '<div style="font-size:16px;font-weight:800;color:#3A2030;margin-bottom:8px;">' + title + '</div>' +
-    '<div style="font-size:13px;color:#B090A0;line-height:1.6;margin-bottom:20px;">' + desc + '</div>' +
-    '<div style="display:flex;gap:10px;">' +
-      '<button class="cd-cancel" style="flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:rgba(0,0,0,0.04);color:#B090A0;">取消</button>' +
-      '<button class="cd-confirm" style="flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#F472B6,#FF8095);color:#fff;">' + (confirmText || '确认') + '</button>' +
+  overlay.innerHTML = '<div class="confirm-dialog">' +
+    '<div class="confirm-dialog-title">' + title + '</div>' +
+    '<div class="confirm-dialog-desc">' + desc + '</div>' +
+    '<div class="confirm-dialog-actions">' +
+      '<button class="cd-cancel confirm-btn-cancel">取消</button>' +
+      '<button class="cd-confirm confirm-btn-ok">' + (confirmText || '确认') + '</button>' +
     '</div></div>';
   overlay.addEventListener('click', function(e) {
     if (e.target === overlay) { overlay.remove(); return; }
@@ -302,19 +301,19 @@ function showBackendGuidance(channel, errMsg) {
   var serverBase = (window.APP_CONFIG && window.APP_CONFIG.server_base) || '未配置';
   var guidance = document.createElement('div');
   guidance.id = 'backendGuidance';
-  guidance.style.cssText = 'margin:12px 20px;padding:16px;background:rgba(255,255,255,0.85);backdrop-filter:blur(8px);border-radius:16px;border:1.5px solid rgba(255,107,107,0.2);';
-  guidance.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
-    '<div style="width:28px;height:28px;border-radius:50%;background:rgba(255,107,107,0.1);display:flex;align-items:center;justify-content:center;">' +
+  guidance.className = 'guidance-card';
+  guidance.innerHTML = '<div class="guidance-header">' +
+    '<div class="icon-circle-sm">' +
     '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#FF6B6B" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
     '</div>' +
-    '<div style="font-size:14px;font-weight:800;color:#3A2030;">' + channel + ' 通道服务不可用</div>' +
+    '<div class="guidance-title">' + channel + ' 通道服务不可用</div>' +
     '</div>' +
-    '<div style="font-size:12px;color:#B090A0;line-height:1.8;">' +
-    '<div style="margin-bottom:6px;">错误详情: <span style="color:#FF6B6B;font-weight:600;">' + (errMsg || '').replace(/</g,'&lt;') + '</span></div>' +
+    '<div class="guidance-body">' +
+    '<div style="margin-bottom:6px;">错误详情: <span class="error-detail">' + (errMsg || '').replace(/</g,'&lt;') + '</span></div>' +
     '<div>请检查后端服务是否已部署 ' + channel + ' 通道模块：</div>' +
-    '<div style="margin:6px 0;padding:8px 12px;background:rgba(0,0,0,0.03);border-radius:8px;font-family:monospace;font-size:11px;line-height:1.6;">' +
-    '1. 后端服务地址: <span style="color:#C4B5FD;">' + serverBase + '</span><br>' +
-    '2. 检查端点 <span style="color:#C4B5FD;">/api/v1/channel/' + channel.toLowerCase() + '/status</span> 是否可用<br>' +
+    '<div class="code-block">' +
+    '1. 后端服务地址: <span class="code-highlight">' + serverBase + '</span><br>' +
+    '2. 检查端点 <span class="code-highlight">/api/v1/channel/' + channel.toLowerCase() + '/status</span> 是否可用<br>' +
     '3. 确认后端 ' + channel + ' 通道插件已安装并配置正确<br>' +
     '4. 查看后端日志排查具体错误原因' +
     '</div>' +
@@ -408,13 +407,12 @@ if (API.isLoggedIn()) {
         var src = escapeHtml(m.source || m.sender || '');
         var txt = escapeHtml(m.content || m.text || '');
         var t = m.time ? new Date(m.time * 1000).toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'}) : '';
-        return '<div class="setting-item" style="margin:0;border-radius:0;background:transparent;">' +
-          '<div style="display:flex;align-items:center;gap:10px;width:100%;">' +
-            '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#F472B6,#FFB0C0);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800;">' + (src.charAt(0) || '?') + '</div>' +
-            '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:#3A2030;">' + src + '</div>' +
-            '<div style="font-size:12px;color:#B090A0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + txt + '</div></div>' +
-            '<span style="font-size:10px;color:#C0A0B0;">' + t + '</span>' +
-          '</div></div>';
+        return '<div class="setting-item msg-row-flat">' +
+          '<div class="avatar-circle">' + (src.charAt(0) || '?') + '</div>' +
+          '<div style="flex:1;min-width:0;"><div class="msg-name">' + src + '</div>' +
+          '<div class="text-ellipsis">' + txt + '</div></div>' +
+          '<span class="msg-time">' + t + '</span>' +
+        '</div>';
       }).join('');
     }).catch(function() {});
   }

@@ -816,3 +816,99 @@
 .phone.dark-mode .swipe-actions { background: linear-gradient(90deg, transparent, #1A1A2E); }
 .phone.dark-mode .mood-legend-label { color: #9080A0; }
 
+/* === QQ通道/微信通道 — 内联样式提取 === */
+
+/* 平坦设置项（无背景/无圆角，用于分组内连续项） */
+.setting-item-flat {
+  margin: 0; border-radius: 0; background: transparent;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+/* 确认弹窗组件 */
+.confirm-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex; align-items: center; justify-content: center;
+}
+.confirm-dialog {
+  width: 280px; background: #fff; border-radius: 18px;
+  padding: 24px 20px 16px; text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+.confirm-dialog-title { font-size: 16px; font-weight: 800; color: #3A2030; margin-bottom: 8px; }
+.confirm-dialog-desc { font-size: 13px; color: #B090A0; line-height: 1.6; margin-bottom: 20px; }
+.confirm-dialog-actions { display: flex; gap: 10px; }
+.confirm-btn-cancel {
+  flex: 1; padding: 12px; border-radius: 12px;
+  font-size: 14px; font-weight: 700; border: none;
+  cursor: pointer; font-family: inherit;
+  background: rgba(0, 0, 0, 0.04); color: #B090A0;
+}
+.confirm-btn-ok {
+  flex: 1; padding: 12px; border-radius: 12px;
+  font-size: 14px; font-weight: 700; border: none;
+  cursor: pointer; font-family: inherit;
+  background: linear-gradient(135deg, #F472B6, #FF8095); color: #fff;
+}
+.confirm-btn-cancel:active, .confirm-btn-ok:active { transform: scale(0.96); }
+
+/* 小圆形图标 */
+.icon-circle-sm {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(255, 107, 107, 0.1);
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* 代码/等宽字体块 */
+.code-block {
+  margin: 6px 0; padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.03); border-radius: 8px;
+  font-family: monospace; font-size: 11px; line-height: 1.6;
+}
+
+/* 圆形头像（消息列表用） */
+.avatar-circle {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #F472B6, #FFB0C0);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 14px; font-weight: 800;
+}
+
+/* 单行截断 */
+.text-ellipsis {
+  font-size: 12px; color: #B090A0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* 后端指导卡片 */
+.guidance-card {
+  margin: 12px 20px; padding: 16px;
+  background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px);
+  border-radius: 16px; border: 1.5px solid rgba(255, 107, 107, 0.2);
+}
+.guidance-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.guidance-title { font-size: 14px; font-weight: 800; color: #3A2030; }
+.guidance-body { font-size: 12px; color: #B090A0; line-height: 1.8; }
+.error-detail { color: #FF6B6B; font-weight: 600; }
+.code-highlight { color: #C4B5FD; }
+
+/* 消息列表行（平坦） */
+.msg-row-flat {
+  margin: 0; border-radius: 0; background: transparent;
+  display: flex; align-items: center; gap: 10px; width: 100%;
+}
+.msg-row-flat .msg-name { font-size: 13px; font-weight: 700; color: #3A2030; }
+.msg-row-flat .msg-time { font-size: 10px; color: #C0A0B0; }
+
+/* 暗色模式 — 通道组件 */
+.phone.dark-mode .setting-item-flat { border-top-color: rgba(255, 255, 255, 0.06); }
+.phone.dark-mode .confirm-dialog { background: #1E1E32; }
+.phone.dark-mode .confirm-btn-cancel { background: rgba(255, 255, 255, 0.06); color: #9088A0; }
+.phone.dark-mode .code-block { background: rgba(255, 255, 255, 0.04); }
+.phone.dark-mode .text-ellipsis { color: #9088A0; }
+.phone.dark-mode .guidance-card { background: rgba(30, 30, 50, 0.85); border-color: rgba(255, 107, 107, 0.15); }
+.phone.dark-mode .guidance-title { color: #E0D8E8; }
+.phone.dark-mode .guidance-body { color: #9088A0; }
+.phone.dark-mode .msg-row-flat .msg-name { color: #E0D8E8; }
+.phone.dark-mode .msg-row-flat .msg-time { color: #9088A0; }
+
