@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>我的数据 v2 — UI 原型</title>
-<link rel="stylesheet" href="shared/tokens.css">
-<link rel="stylesheet" href="shared/base.css">
-<link rel="stylesheet" href="shared/components.css">
-<link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/effects.css">
+<link rel="stylesheet" href="shared/dist/tokens.css">
+<link rel="stylesheet" href="shared/dist/base.css">
+<link rel="stylesheet" href="shared/dist/components.css">
+<link rel="stylesheet" href="shared/dist/anime-cat.css">
+<link rel="stylesheet" href="shared/dist/effects.css">
 <style>
 /* ===== 数据面板 — 页面专属样式 ===== */
 body { background-attachment: fixed; overflow-x: hidden; }
@@ -220,7 +220,7 @@ body { background-attachment: fixed; overflow-x: hidden; }
     <!-- 关系卡片 -->
     <div class="relation-card">
       <div class="relation-avatar">
-        <div class="img-cat avatar img-md"><img src="shared/agnes-cat.png" alt="猫娘"></div>
+        <div class="img-cat avatar img-md"><img src="shared/agnes-cat.webp" alt="猫娘"></div>
       </div>
       <div class="relation-info">
         <div class="relation-name">你和 小咪</div>
@@ -257,11 +257,11 @@ body { background-attachment: fixed; overflow-x: hidden; }
     <div class="chart-card">
       <div class="chart-title">心情日历<span class="chart-subtitle">近4周</span></div>
       <div class="mood-cal" id="moodCal" data-mood-grid></div>
-      <div style="display:flex;align-items:center;gap:8px;margin-top:10px;justify-content:center;">
-        <div style="display:flex;align-items:center;gap:3px;"><div style="width:10px;height:10px;border-radius:2px;background:#F5F0F5;"></div><span style="font-size:9px;color:#C0A0B0;">平淡</span></div>
-        <div style="display:flex;align-items:center;gap:3px;"><div style="width:10px;height:10px;border-radius:2px;background:#FFE0E8;"></div><span style="font-size:9px;color:#C0A0B0;">开心</span></div>
-        <div style="display:flex;align-items:center;gap:3px;"><div style="width:10px;height:10px;border-radius:2px;background:#FFB0C0;"></div><span style="font-size:9px;color:#C0A0B0;">兴奋</span></div>
-        <div style="display:flex;align-items:center;gap:3px;"><div style="width:10px;height:10px;border-radius:2px;background:#F472B6;"></div><span style="font-size:9px;color:#C0A0B0;">甜蜜</span></div>
+      <div class="mood-legend">
+        <div class="mood-legend-item"><div class="mood-legend-dot" style="background:#F5F0F5;"></div><span class="mood-legend-label">平淡</span></div>
+        <div class="mood-legend-item"><div class="mood-legend-dot" style="background:#FFE0E8;"></div><span class="mood-legend-label">开心</span></div>
+        <div class="mood-legend-item"><div class="mood-legend-dot" style="background:#FFB0C0;"></div><span class="mood-legend-label">兴奋</span></div>
+        <div class="mood-legend-item"><div class="mood-legend-dot" style="background:#F472B6;"></div><span class="mood-legend-label">甜蜜</span></div>
       </div>
     </div>
 
@@ -352,9 +352,9 @@ body { background-attachment: fixed; overflow-x: hidden; }
     <!-- 消息搜索 -->
     <div class="chart-card" style="margin-top:10px;">
       <div class="chart-title">搜索聊天记录<span class="chart-subtitle">全文检索</span></div>
-      <form id="searchForm" style="display:flex;gap:8px;margin-bottom:8px;">
-        <input id="searchInput" type="text" placeholder="输入关键词..." style="flex:1;padding:10px 14px;border-radius:12px;border:1.5px solid rgba(244,114,182,0.15);font-size:13px;font-family:inherit;background:rgba(255,255,255,0.8);outline:none;color:#3A2030;">
-        <button type="submit" style="padding:10px 16px;border-radius:12px;background:linear-gradient(135deg,#F472B6,#FFB0C0);color:#fff;border:none;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;">🔍 搜索</button>
+      <form id="searchForm" class="search-bar" style="margin-bottom:8px;">
+        <input id="searchInput" type="text" placeholder="输入关键词..." class="search-input">
+        <button type="submit" class="search-btn">🔍 搜索</button>
       </form>
       <div id="searchCount" style="font-size:10px;color:#C0A0B0;margin-bottom:6px;"></div>
       <div id="searchResults" style="max-height:200px;overflow-y:auto;"></div>
@@ -383,10 +383,10 @@ body { background-attachment: fixed; overflow-x: hidden; }
     </a>
   </div>
 </div>
-<script src="shared/native.js"></script>
-<script src="shared/config.js"></script>
-<script src="shared/api.js"></script>
-<script src="shared/app.js"></script>
+<script src="shared/dist/native.js"></script>
+<script src="shared/dist/config.js"></script>
+<script src="shared/dist/api.js"></script>
+<script src="shared/dist/app.js"></script>
 <script>
 
 // Load stats data for first bot

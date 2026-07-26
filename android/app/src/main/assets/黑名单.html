@@ -1,13 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>黑名单 — UI 原型</title>
-<link rel="stylesheet" href="shared/tokens.css">
-<link rel="stylesheet" href="shared/base.css">
-<link rel="stylesheet" href="shared/components.css">
-<link rel="stylesheet" href="shared/effects.css">
+<link rel="stylesheet" href="shared/dist/tokens.css">
+<link rel="stylesheet" href="shared/dist/base.css">
+<link rel="stylesheet" href="shared/dist/components.css">
+<link rel="stylesheet" href="shared/dist/effects.css">
 <style>
 /* ===== 黑名单 — 页面专属样式 ===== */
 .title-bar .count { font-size: 12px; opacity: 0.8; }
@@ -98,10 +98,10 @@
   </div>
   <div class="toast" id="toast"></div>
 </div>
-<script src="shared/native.js"></script>
-<script src="shared/config.js"></script>
-<script src="shared/api.js"></script>
-<script src="shared/app.js"></script>
+<script src="shared/dist/native.js"></script>
+<script src="shared/dist/config.js"></script>
+<script src="shared/dist/api.js"></script>
+<script src="shared/dist/app.js"></script>
 <script>
 function formatBlockTime(ts) {
   var d = new Date(ts * 1000); var now = new Date();

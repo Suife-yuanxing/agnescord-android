@@ -1,15 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>Bot 创建向导 v2 — UI 原型</title>
-<link rel="stylesheet" href="shared/tokens.css">
-<link rel="stylesheet" href="shared/base.css">
-<link rel="stylesheet" href="shared/components.css">
-<link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/effects.css">
-<script src="shared/native.js"></script>
+<link rel="stylesheet" href="shared/dist/tokens.css">
+<link rel="stylesheet" href="shared/dist/base.css">
+<link rel="stylesheet" href="shared/dist/components.css">
+<link rel="stylesheet" href="shared/dist/anime-cat.css">
+<link rel="stylesheet" href="shared/dist/effects.css">
+<script src="shared/dist/native.js"></script>
 <style>
 /* ===== Page-Specific: Bot 创建向导 v2 ===== */
 
@@ -278,27 +278,27 @@
       </div>
       <div class="template-grid" id="templateGrid">
         <div class="template-mini" onclick="selectTemplate(this,'傲娇','tsundere','嘴硬心软，表面不承认关心你但其实很在意')">
-          <div class="avatar-cat-wrap"><div class="img-cat avatar img-md tsundere"><img src="shared/agnes-tsundere.png" alt="tsundere"></div></div>
+          <div class="avatar-cat-wrap"><div class="img-cat avatar img-md tsundere"><img src="shared/agnes-tsundere.webp" alt="tsundere"></div></div>
           <div class="t-name">傲娇</div>
         </div>
         <div class="template-mini" onclick="selectTemplate(this,'温柔','gentle','轻声细语的大姐姐，包容你的所有')">
-          <div class="avatar-cat-wrap"><div class="img-cat avatar img-md gentle"><img src="shared/agnes-gentle.png" alt="gentle"></div></div>
+          <div class="avatar-cat-wrap"><div class="img-cat avatar img-md gentle"><img src="shared/agnes-gentle.webp" alt="gentle"></div></div>
           <div class="t-name">温柔</div>
         </div>
         <div class="template-mini" onclick="selectTemplate(this,'毒舌','sarcastic','吐槽犀利但内心善良，嘴上不饶人')">
-          <div class="avatar-cat-wrap"><div class="img-cat avatar img-md sarcastic"><img src="shared/agnes-sarcastic.png" alt="sarcastic"></div></div>
+          <div class="avatar-cat-wrap"><div class="img-cat avatar img-md sarcastic"><img src="shared/agnes-sarcastic.webp" alt="sarcastic"></div></div>
           <div class="t-name">毒舌</div>
         </div>
         <div class="template-mini" onclick="selectTemplate(this,'元气','energetic','活力满满永远正能量，像小太阳')">
-          <div class="avatar-cat-wrap"><div class="img-cat avatar img-md energetic"><img src="shared/agnes-energetic.png" alt="energetic"></div></div>
+          <div class="avatar-cat-wrap"><div class="img-cat avatar img-md energetic"><img src="shared/agnes-energetic.webp" alt="energetic"></div></div>
           <div class="t-name">元气</div>
         </div>
         <div class="template-mini" onclick="selectTemplate(this,'三无','emotionless','话少表情少，但偶尔的一句话很暖')">
-          <div class="avatar-cat-wrap"><div class="img-cat avatar img-md emotionless"><img src="shared/agnes-emotionless.png" alt="emotionless"></div></div>
+          <div class="avatar-cat-wrap"><div class="img-cat avatar img-md emotionless"><img src="shared/agnes-emotionless.webp" alt="emotionless"></div></div>
           <div class="t-name">三无</div>
         </div>
         <div class="template-mini" onclick="selectTemplate(this,'腹黑','sly','表面可爱实则心机，悄悄算计你')">
-          <div class="avatar-cat-wrap"><div class="img-cat avatar img-md sly"><img src="shared/agnes-sly.png" alt="sly"></div></div>
+          <div class="avatar-cat-wrap"><div class="img-cat avatar img-md sly"><img src="shared/agnes-sly.webp" alt="sly"></div></div>
           <div class="t-name">腹黑</div>
         </div>
       </div>
@@ -348,7 +348,7 @@
     <div class="step-content" id="step3">
       <div class="final-card">
         <div class="avatar-wrap" id="finalAvatar">
-          <div class="img-cat hero img-lg tsundere"><img src="shared/agnes-tsundere.png" alt="tsundere"></div>
+          <div class="img-cat hero img-lg tsundere"><img src="shared/agnes-tsundere.webp" alt="tsundere"></div>
         </div>
         <div class="name" id="finalName">小咪</div>
         <div class="p-tag" id="finalPersona">自定义</div>
@@ -365,9 +365,9 @@
   </div>
 </div>
 
-<script src="shared/config.js"></script>
-<script src="shared/app.js"></script>
-<script src="shared/api.js"></script>
+<script src="shared/dist/config.js"></script>
+<script src="shared/dist/app.js"></script>
+<script src="shared/dist/api.js"></script>
 <script>
 // ── 登录守卫：未登录跳回登录页
 if (!API.isLoggedIn()) { location.replace('登录页.html'); }
@@ -375,7 +375,7 @@ if (!API.isLoggedIn()) { location.replace('登录页.html'); }
 let step = 1;
 let personaClass = 'tsundere';
 let personaLabel = '自定义';
-let personaImage = 'shared/agnes-tsundere.png';
+let personaImage = 'shared/agnes-tsundere.webp';
 let selectedTraits = new Set();
 
 function toggleTrait(el) {

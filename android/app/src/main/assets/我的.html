@@ -1,17 +1,17 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>我的 — UI 原型</title>
-<link rel="stylesheet" href="shared/tokens.css">
-<link rel="stylesheet" href="shared/base.css">
-<link rel="stylesheet" href="shared/components.css">
-<link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/effects.css">
-<script src="shared/native.js"></script>
-<script src="shared/config.js"></script>
-<script src="shared/api.js"></script>
+<link rel="stylesheet" href="shared/dist/tokens.css">
+<link rel="stylesheet" href="shared/dist/base.css">
+<link rel="stylesheet" href="shared/dist/components.css">
+<link rel="stylesheet" href="shared/dist/anime-cat.css">
+<link rel="stylesheet" href="shared/dist/effects.css">
+<script src="shared/dist/native.js"></script>
+<script src="shared/dist/config.js"></script>
+<script src="shared/dist/api.js"></script>
 <style>
 /* ===== 我的 — 页面专属样式 ===== */
 
@@ -192,7 +192,7 @@
     <!-- 账户卡片 -->
     <div class="account-card" onclick="location.href='编辑个人资料.html'" id="accountCard">
       <div class="account-avatar" id="accountAvatar">
-        <div class="img-cat avatar img-md"><img src="shared/agnes-cat.png" alt="猫娘"></div>
+        <div class="img-cat avatar img-md"><img src="shared/agnes-cat.webp" alt="猫娘"></div>
       </div>
       <div class="account-info">
         <div class="account-name" id="accountName">小明</div>
@@ -781,7 +781,7 @@ if (API.isLoggedIn()) {
       if (avWrap) {
         // [安全] 用 createElement 安全设置图片 src
         avWrap.innerHTML = '';
-        var img = _safeCreateImg(fullUrl, '头像', 'shared/agnes-cat.png');
+        var img = _safeCreateImg(fullUrl, '头像', 'shared/agnes-cat.webp');
         img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
         avWrap.appendChild(img);
       }
@@ -825,6 +825,6 @@ if (API.isLoggedIn()) {
 }
 </script>
 
-<script src="shared/app.js"></script>
+<script src="shared/dist/app.js"></script>
 </body>
 </html>

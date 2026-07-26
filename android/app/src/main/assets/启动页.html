@@ -1,13 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>启动页 — UI 原型</title>
-<link rel="stylesheet" href="shared/tokens.css">
-<link rel="stylesheet" href="shared/base.css">
-<link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/effects.css">
+<link rel="stylesheet" href="shared/dist/tokens.css">
+<link rel="stylesheet" href="shared/dist/base.css">
+<link rel="stylesheet" href="shared/dist/anime-cat.css">
+<link rel="stylesheet" href="shared/dist/effects.css">
 <style>
 /* ===== 启动页 — 专属样式 ===== */
 /* 依赖 shared/ 目录：tokens.css (变量) + base.css (reset/phone) + effects.css (orb/petal keyframes) */
@@ -231,7 +231,7 @@
   <!-- Central Content -->
   <div class="splash-content">
     <div class="splash-cat">
-      <img src="shared/agnes-cat.png" alt="猫娘林念念">
+      <img src="shared/agnes-cat.webp" alt="猫娘林念念">
     </div>
     <h1 class="splash-title">林念念</h1>
     <p class="splash-sub">你的 AI 猫娘伙伴</p>
@@ -245,10 +245,10 @@
 
 </div>
 
-<script src="shared/config.js"></script>
-<script src="shared/native.js"></script>
-<script src="shared/api.js"></script>
-<script src="shared/app.js"></script>
+<script src="shared/dist/config.js"></script>
+<script src="shared/dist/native.js"></script>
+<script src="shared/dist/api.js"></script>
+<script src="shared/dist/app.js"></script>
 <script>
 // ── 启动页路由 ──
 // 品牌动画结束后检查登录状态：已登录→首页，未登录→登录页

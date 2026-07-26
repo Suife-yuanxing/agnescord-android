@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>Bot管理 — UI 原型</title>
-<link rel="stylesheet" href="shared/tokens.css">
-<link rel="stylesheet" href="shared/base.css">
-<link rel="stylesheet" href="shared/components.css">
-<link rel="stylesheet" href="shared/anime-cat.css">
-<link rel="stylesheet" href="shared/effects.css">
+<link rel="stylesheet" href="shared/dist/tokens.css">
+<link rel="stylesheet" href="shared/dist/base.css">
+<link rel="stylesheet" href="shared/dist/components.css">
+<link rel="stylesheet" href="shared/dist/anime-cat.css">
+<link rel="stylesheet" href="shared/dist/effects.css">
 <style>
 /* ===== 我的Bot — 页面专属样式 ===== */
 .scroll-area { padding: 12px 0 8px; }
@@ -87,10 +87,10 @@
     <a class="nav-item" href="我的.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 18c0-2 2.2-4 5-4s5 2 5 4"/></svg>我的</a>
   </div>
 </div>
-<script src="shared/native.js"></script>
-<script src="shared/config.js"></script>
-<script src="shared/api.js"></script>
-<script src="shared/app.js"></script>
+<script src="shared/dist/native.js"></script>
+<script src="shared/dist/config.js"></script>
+<script src="shared/dist/api.js"></script>
+<script src="shared/dist/app.js"></script>
 <script>
 // ===== 我的Bot — API 数据加载 =====
 (function() {
@@ -98,7 +98,7 @@
 
   var AVATAR_COLORS = ['av-pink', 'av-purple', 'av-orange'];
   var PERSONA_LABELS = { tsundere: '傲娇', gentle: '温柔', sarcastic: '毒舌', energetic: '元气', emotionless: '三无', sly: '腹黑' };
-  var PERSONA_AVATARS = { tsundere: 'agnes-tsundere.png', gentle: 'agnes-gentle.png', sarcastic: 'agnes-sarcastic.png', energetic: 'agnes-energetic.png', emotionless: 'agnes-emotionless.png', sly: 'agnes-sly.png' };
+  var PERSONA_AVATARS = { tsundere: 'agnes-tsundere.webp', gentle: 'agnes-gentle.webp', sarcastic: 'agnes-sarcastic.webp', energetic: 'agnes-energetic.webp', emotionless: 'agnes-emotionless.webp', sly: 'agnes-sly.webp' };
 
   // Bot 状态逻辑：基于后端 is_active 字段真实反映状态
   // is_active=false 表示 Bot 已被管理员/用户停用，内置聊天不可用
@@ -115,7 +115,7 @@
     if (!container) return;
 
     if (!bots || bots.length === 0) {
-      container.innerHTML = '<div class="empty-state"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8" r="5"/><path d="M4 20c0-4 3.6-7 8-7"/></svg></div><div class="title">还没有 Bot</div><div class="desc">点击右上角 + 创建一个吧</div><button class="btn-primary" onclick="location.href=\'Bot创建向导.html\'" style="border:none;border-radius:14px;padding:10px 24px;background:#F472B6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">创建 Bot</button></div>';
+      container.innerHTML = '<div class="empty-state"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8" r="5"/><path d="M4 20c0-4 3.6-7 8-7"/></svg></div><div class="title">还没有 Bot</div><div class="desc">点击右上角 + 创建一个吧</div><button class="btn-action" onclick="location.href=\'Bot创建向导.html\'">创建 Bot</button></div>';
       return;
     }
 
@@ -123,7 +123,7 @@
     container.innerHTML = bots.map(function(b, i) {
       var colorCls = AVATAR_COLORS[i % 3];
       var personaLabel = PERSONA_LABELS[b.personality] || b.personality || '';
-      var avatarFile = PERSONA_AVATARS[b.personality] || 'agnes-cat.png';
+      var avatarFile = PERSONA_AVATARS[b.personality] || 'agnes-cat.webp';
       var status = computeBotStatus(b);
       var isActive = status.online;
       var fallbackAvatar = 'shared/' + avatarFile;
@@ -131,10 +131,10 @@
       var avatarPlaceholder = b.avatar_url ? 'data-avatar-url="' + escapeHtml(b.avatar_url) + '"' : '';
       var statusText = isActive ? '运行中' : '已停用';
 
-      return '<div class="bot-card-wrap" style="position:relative;overflow:hidden;margin-bottom:10px;">' +
-        '<div class="swipe-actions" style="position:absolute;right:0;top:0;bottom:0;display:none;align-items:center;gap:4px;padding-right:12px;background:linear-gradient(90deg,transparent,#FFF0F3);z-index:0;">' +
-          '<button class="swipe-settings-btn" data-bot-id="' + parseInt(b.id, 10) + '" style="width:36px;height:36px;border-radius:50%;border:none;background:#C4B5FD;color:#fff;font-size:14px;cursor:pointer;">⚙</button>' +
-          '<button class="swipe-delete-btn" data-bot-id="' + parseInt(b.id, 10) + '" data-bot-name="' + escapeHtml(b.name) + '" style="width:36px;height:36px;border-radius:50%;border:none;background:#FF6B7A;color:#fff;font-size:14px;cursor:pointer;">✕</button>' +
+      return '<div class="bot-card-wrap">' +
+        '<div class="swipe-actions">' +
+          '<button class="swipe-btn swipe-btn-settings swipe-settings-btn" data-bot-id="' + parseInt(b.id, 10) + '">⚙</button>' +
+          '<button class="swipe-btn swipe-btn-delete swipe-delete-btn" data-bot-id="' + parseInt(b.id, 10) + '" data-bot-name="' + escapeHtml(b.name) + '">✕</button>' +
         '</div>' +
         '<div class="bot-card' + (isActive ? '' : ' offline') + '" data-bot-id="' + parseInt(b.id, 10) + '" ' + avatarPlaceholder + ' data-fallback="' + escapeHtml(fallbackAvatar) + '" style="position:relative;z-index:1;background:rgba(255,255,255,0.8);transition:transform 0.25s ease;">' +
           '<div class="bot-avatar ' + colorCls + '">' +
@@ -229,7 +229,7 @@
     bindSwipe();
   }).catch(function(err) {
     var msg = err.message || '网络错误';
-    document.getElementById('botList').innerHTML = '<div class="empty-state"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C0A0B0" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="title">加载失败</div><div class="desc">' + escapeHtml(msg) + '<br>请检查网络连接或后端服务状态</div><button onclick="location.reload()" style="border:none;border-radius:14px;padding:10px 24px;background:#F472B6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">重试</button></div>';
+    document.getElementById('botList').innerHTML = '<div class="empty-state"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C0A0B0" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="title">加载失败</div><div class="desc">' + escapeHtml(msg) + '<br>请检查网络连接或后端服务状态</div><button class="btn-action" onclick="location.reload()">重试</button></div>';
   });
 
   // 聊天
