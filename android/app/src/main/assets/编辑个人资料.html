@@ -473,7 +473,6 @@ function hideDatePicker() {
 // Load user profile — C1：修回填选择器匹配实际元素 id/class
 if (API.isLoggedIn()) {
   API.getProfile().then(function(user) {
-    console.log('[profile] loaded:', JSON.stringify(user).substring(0, 300));
     var nickEl = document.getElementById('nickname');
     var bioEl = document.getElementById('bio');
     if (nickEl) nickEl.value = user.nickname || '';

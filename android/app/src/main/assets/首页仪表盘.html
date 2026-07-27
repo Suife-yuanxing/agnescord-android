@@ -382,8 +382,6 @@
         activeVal = d.today.messages || d.today.message_count || d.today.active_count || 0;
       }
       activeEl.textContent = activeVal;
-      // E5诊断：log 实际字段值供 CDP 验证
-      if (d.today) console.log('[E5] today fields:', Object.keys(d.today), 'messages=' + d.today.messages, 'message_count=' + d.today.message_count, 'active_count=' + d.today.active_count);
     }
 
     // 通道状态

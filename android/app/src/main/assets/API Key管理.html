@@ -428,7 +428,6 @@ body { background-attachment: fixed; overflow-x: hidden; }
     if (!container) return;
     container.innerHTML = '<div class="key-card" style="text-align:center;padding:32px;color:#B090A0;">加载中…</div>';
     API.getApiKeyUsageSummary().then(function(d) {
-      console.log('[B4] usage data:', JSON.stringify(d).substring(0,200));
       // 用概览数据渲染（后端有详细 usage 时用详细，否则用概览）
       var total = d.total_calls || d.totalCalls || 0;
       var active = d.active_keys || d.activeKeys || 0;

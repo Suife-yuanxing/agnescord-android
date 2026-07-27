@@ -168,21 +168,18 @@ function applyChatBgToOverlay(bgData) {
       bgEl.style.opacity = '0.18';
     }
     if (phone) phone.style.setProperty('background', 'url(' + bgData.value + ') center/cover no-repeat', 'important');
-    console.log('[chatBg] applied custom bg');
   } else if (bgData.type === 'dark') {
     if (bgEl) {
       bgEl.style.backgroundColor = bgData.value;
       bgEl.style.opacity = '0.08';
     }
     if (phone) phone.style.setProperty('background', bgData.value, 'important');
-    console.log('[chatBg] applied dark bg:', bgData.value);
   } else {
     if (bgEl) {
       bgEl.style.backgroundImage = bgData.value;
       bgEl.style.opacity = '0.12';
     }
     if (phone) phone.style.setProperty('background', bgData.value, 'important');
-    console.log('[chatBg] applied gradient bg');
   }
 }
 
@@ -197,7 +194,6 @@ function setChatBg(bg, el) {
     bgData = { type: bg.startsWith('#') ? 'dark' : 'gradient', value: bg };
   }
   localStorage.setItem(CHAT_BG_KEY, JSON.stringify(bgData));
-  console.log('[chatBg] set: type=' + bgData.type + ' val=' + (bgData.value || 'default').substring(0,30));
   applyChatBgToOverlay(bgData);
   document.querySelectorAll('.bg-opt').forEach(function(o) { o.style.borderColor = 'transparent'; });
   if (el) el.style.borderColor = '#F472B6';
@@ -247,8 +243,7 @@ function saveChatBgCustom(dataUrl) {
 function loadChatBg() {
   try {
     var raw = localStorage.getItem(CHAT_BG_KEY);
-    console.log('[chatBg] loadChatBg: raw=' + (raw ? raw.substring(0,40) : 'null'));
-    if (!raw) { console.log('[chatBg] no saved bg'); return; }
+    if (!raw) return;
     var bgData = JSON.parse(raw);
     applyChatBgToOverlay(bgData);
     var matchVal = bgData.value;
