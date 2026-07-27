@@ -435,13 +435,13 @@ if (API.isLoggedIn()) {
       if (relNameEl) relNameEl.textContent = 'Lv.' + (s.affection_level || 0) + ' ' + (s.affection_title || '');
       if (relProgEl) relProgEl.textContent = (s.affection_progress || 0) + '%';
       if (relLvlBar) relLvlBar.style.width = (s.affection_progress || 0) + '%';
-    }).catch(function() {});
+    }).catch(function(e) { console.warn('[Stats] summary:', e.message); });
 
     // Relation
     API.getStatsRelation(STAT_BOT_ID).then(function(r) {
       var daysEl = document.querySelector('[data-stat="chat_days_relation"]');
       if (daysEl) daysEl.textContent = '已经认识 ' + (r.days_since_first_chat || 0) + ' 天啦 ✨';
-    }).catch(function() {});
+    }).catch(function(e) { console.warn('[Stats] relation:', e.message); });
 
     // Mood calendar
     API.getStatsMood({ bot_id: STAT_BOT_ID, days: 28 }).then(function(d) {
@@ -464,7 +464,7 @@ if (API.isLoggedIn()) {
           return '<div class="mood-day m' + level + '" title="' + (m.date || '') + ' · ' + label + ' · ' + (m.total_msgs||0) + '条" onclick="showToast(\'' + (m.date||'') + ': ' + label + ' (' + (m.total_msgs||0) + '条消息)\')"></div>';
         }).join('');
       }
-    }).catch(function() {});
+    }).catch(function(e) { console.warn('[Stats] mood:', e.message); });
 
     // Topics
     API.getStatsTopics({ bot_id: STAT_BOT_ID, days: 30 }).then(function(d) {
@@ -490,7 +490,7 @@ if (API.isLoggedIn()) {
           '</div>';
         }).join('');
       }
-    }).catch(function() {});
+    }).catch(function(e) { console.warn('[Stats] topics:', e.message); });
 
     // Active hours — wire to real API
     API.getStatsActiveHours({ bot_id: STAT_BOT_ID, days: 30 }).then(function(d) {
@@ -521,7 +521,7 @@ if (API.isLoggedIn()) {
             '🌅 早上 ' + peakLabel + ' 时是你最活跃的时段';
         }
       }
-    }).catch(function() {});
+    }).catch(function(e) { console.warn('[Stats] hours:', e.message); });
 
     // User profile tags
     API.getStatsUserProfile(STAT_BOT_ID).then(function(d) {
@@ -531,7 +531,7 @@ if (API.isLoggedIn()) {
           return '<span class="know-tag">' + _esc(t) + '</span>';
         }).join('');
       }
-    }).catch(function() {});
+    }).catch(function(e) { console.warn('[Stats] profile:', e.message); });
 
     // Achievements
     API.getStatsAchievements(STAT_BOT_ID).then(function(d) {
@@ -549,7 +549,7 @@ if (API.isLoggedIn()) {
           '</div>';
         }).join('');
       }
-    }).catch(function() {});
+    }).catch(function(e) { console.warn('[Stats] achievements:', e.message); });
   }
 
   // Share

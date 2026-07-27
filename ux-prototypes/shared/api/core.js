@@ -131,6 +131,7 @@
         return _fetch(path, options);
       }
       clearTokens();
+      if (window._handleAuthError) window._handleAuthError();
       throw new Error('未登录');
     }
     return resp;
@@ -158,6 +159,7 @@
       var ok = await refreshAccessToken();
       if (ok) { options._retried = true; return _upload(path, formData, options); }
       clearTokens();
+      if (window._handleAuthError) window._handleAuthError();
       throw new Error('未登录');
     }
     return resp;

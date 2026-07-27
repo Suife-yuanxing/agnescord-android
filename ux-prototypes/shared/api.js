@@ -149,8 +149,9 @@ var API = (function() {
         options._retried = true;
         return _fetch(path, options);
       }
-      // 刷新失败 → 清 token（不再强制跳登录，由各页面自行处理）
+      // 刷新失败 → 清 token + 全局 401 拦截
       clearTokens();
+      if (window._handleAuthError) window._handleAuthError();
       throw new Error('未登录');
     }
     return resp;
@@ -178,6 +179,7 @@ var API = (function() {
       var ok = await refreshAccessToken();
       if (ok) { options._retried = true; return _upload(path, formData, options); }
       clearTokens();
+      if (window._handleAuthError) window._handleAuthError();
       throw new Error('未登录');
     }
     return resp;

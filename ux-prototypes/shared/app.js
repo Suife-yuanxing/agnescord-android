@@ -505,4 +505,16 @@
       location.href = url;
     }
   };
+
+  /* === 全局 401 未登录拦截器 ===
+   * api.js 在 JWT 刷新失败后调用此函数，自动跳转登录页。
+   * 登录页/注册页/启动页不触发跳转。
+   */
+  window._handleAuthError = function() {
+    var page = location.pathname || '';
+    // 登录/注册/启动页不跳转（这些页面本身处理未登录状态）
+    if (page.indexOf('登录页') >= 0 || page.indexOf('注册页') >= 0 || page.indexOf('启动页') >= 0) return;
+    if (typeof showToast === 'function') showToast('登录已过期，请重新登录', 'error');
+    setTimeout(function() { location.href = '登录页.html'; }, 1200);
+  };
 })();

@@ -227,6 +227,9 @@
 
     <!-- 危险操作 -->
     <div class="danger-zone">
+      <button class="btn-action" id="reconnectBtn" onclick="handleReconnect()" style="display:none;width:100%;margin-bottom:10px;">
+        重新连接
+      </button>
       <button class="danger-btn" id="disconnectBtn" onclick="handleDisconnect()">
         断开连接
       </button>
@@ -286,12 +289,35 @@ function handleDisconnect() {
       sc.querySelector('.sc-label').textContent = '已断开';
       sc.querySelector('.sc-detail').textContent = 'QQ 通道未连接';
       sc.querySelector('.sc-badge').textContent = '离线';
-      btn.textContent = '已断开';
+      btn.textContent = '断开连接'; btn.disabled = false; btn.style.display = 'none';
+      var reconnectBtn = document.getElementById('reconnectBtn');
+      if (reconnectBtn) reconnectBtn.style.display = 'block';
     }).catch(function(e){
       showToast('断开失败: ' + e.message, 'error');
       btn.disabled = false; btn.textContent = '断开连接';
     });
   }, '断开连接');
+}
+
+function handleReconnect() {
+  var btn = document.getElementById('reconnectBtn');
+  btn.disabled = true; btn.textContent = '连接中...';
+  showToast('正在尝试连接 QQ 通道...');
+  // 后端 QQ 连接由服务端管理，前端调用 status 接口探测状态
+  API.getQQStatus().then(function(qq) {
+    btn.disabled = false; btn.textContent = '重新连接';
+    if (qq.connected) {
+      showToast('QQ 通道已连接', 'success');
+      loadQQStatus();
+    } else {
+      showToast('QQ 通道未连接，请检查后端服务配置', 'error');
+      showBackendGuidance('QQ', 'QQ Bot 未连接，请确认后端已配置并启动 QQ 通道服务');
+    }
+  }).catch(function(e) {
+    btn.disabled = false; btn.textContent = '重新连接';
+    showToast('连接失败: ' + e.message, 'error');
+    showBackendGuidance('QQ', e.message);
+  });
 }
 
 // 后端配置引导 — 当接口不可用时显示
@@ -357,6 +383,11 @@ if (API.isLoggedIn()) {
       }
       var badge = sc && sc.querySelector('.sc-badge');
       if (badge) badge.textContent = qq.connected ? '在线' : '离线';
+      // 显示/隐藏连接/断开按钮
+      var reconnectBtn = document.getElementById('reconnectBtn');
+      var disconnectBtn = document.getElementById('disconnectBtn');
+      if (reconnectBtn) reconnectBtn.style.display = qq.connected ? 'none' : 'block';
+      if (disconnectBtn) disconnectBtn.style.display = qq.connected ? 'block' : 'none';
       var qqNumEl = document.querySelector('[data-qq-number]');
       if (qqNumEl && qq.qq_number) qqNumEl.textContent = qq.qq_number;
       // 连接时间
@@ -371,8 +402,13 @@ if (API.isLoggedIn()) {
       }
     }).catch(function(err) {
       var errMsg = err.message || '未知错误';
+      // 401 未登录处理
+      if (errMsg === '未登录' || errMsg.indexOf('401') >= 0) {
+        showToast('登录已过期，请重新登录', 'error');
+        setTimeout(function() { location.href = '登录页.html'; }, 1200);
+        return;
+      }
       console.error('[QQ] status error:', errMsg, err);
-      // 显示实际错误信息
       var statusEl = document.querySelector('[data-qq-status]');
       if (statusEl) statusEl.textContent = '服务异常';
       var sc = document.querySelector('.status-card');
@@ -383,7 +419,9 @@ if (API.isLoggedIn()) {
       }
       var badge = sc && sc.querySelector('.sc-badge');
       if (badge) badge.textContent = '异常';
-      // 显示后端配置引导
+      // 异常时显示重连按钮
+      var reconnectBtn = document.getElementById('reconnectBtn');
+      if (reconnectBtn) reconnectBtn.style.display = 'block';
       showBackendGuidance('QQ', errMsg);
     });
     API.getQQStats().then(function(s) {
@@ -418,6 +456,17 @@ if (API.isLoggedIn()) {
   }
   loadQQStatus();
   setInterval(loadQQStatus, 30000); // auto refresh every 30s
+} else {
+  // 未登录提示
+  var statusEl = document.querySelector('[data-qq-status]');
+  if (statusEl) statusEl.textContent = '未登录';
+  var sc = document.querySelector('.status-card');
+  if (sc) {
+    sc.style.background = 'linear-gradient(135deg, #B0A8C0 0%, #C8C0D8 50%, #D8D0E8 100%)';
+    var detailEl = sc.querySelector('.sc-detail');
+    if (detailEl) detailEl.textContent = '请先登录后查看通道状态';
+  }
+  showToast('请先登录后再查看通道状态', 'error');
 }
 
 // 首次加载 QQ 设置（不放入 30s 轮询，避免覆盖用户操作）
