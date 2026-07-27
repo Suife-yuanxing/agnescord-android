@@ -1,19 +1,19 @@
-/* ===== 林念念 Bot — Shared Components ===== */
-/* Buttons + Inputs + Cards + Toast + Toggle + Modal + Bottom Nav */
+/* ===== 林念念 Bot — Shared Components v5 ===== */
+/* 日系手账风: Buttons + Inputs + Cards + Toast + Toggle + Modal + Bottom Nav */
 
-/* === Primary Button === */
+/* === Primary Button — 纯色填充 + 纸片阴影 + 手绘描边 === */
 .btn-primary {
-  width: 100%; padding: 14px; border-radius: var(--radius-lg, 16px);
-  background: var(--gradient-primary);
-  color: #fff; border: none;
-  font-size: var(--font-size-lg, 16px); font-weight: var(--font-weight-bold, 700);
+  width: 100%; padding: 14px; border-radius: var(--radius-lg, 10px);
+  background: var(--color-primary, #F2A7B3);
+  color: #fff; border: 2px solid var(--color-primary-dark, #E8899A);
+  font-size: var(--font-size-lg, 17px); font-weight: var(--font-weight-bold, 700);
   font-family: var(--font-family);
   cursor: pointer;
-  box-shadow: var(--shadow-btn);
+  box-shadow: var(--shadow-btn, 2px 3px 0 rgba(74, 55, 40, 0.1));
   transition: all var(--transition-base);
 }
-.btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-btn-hover); }
-.btn-primary:active { transform: scale(0.97); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-btn-hover, 3px 4px 0 rgba(74, 55, 40, 0.14)); }
+.btn-primary:active { transform: translateY(1px); box-shadow: none; }
 .btn-primary:disabled { opacity: 0.5; pointer-events: none; }
 .btn-primary.loading { pointer-events: none; position: relative; color: transparent; }
 .btn-primary.loading::after {
@@ -26,25 +26,25 @@
 }
 @keyframes btn-spin { to { transform: rotate(360deg); } }
 
-/* === Outline Button === */
+/* === Outline Button — 手绘描边风 === */
 .btn-outline {
-  width: 100%; padding: 14px; border-radius: var(--radius-lg, 16px);
+  width: 100%; padding: 14px; border-radius: var(--radius-lg, 10px);
   background: #fff; color: var(--color-primary);
-  border: 1.5px solid var(--color-primary-border);
+  border: 2px solid var(--color-primary-border);
   font-size: calc(15px * var(--font-scale, 1)); font-weight: var(--font-weight-bold, 700);
   font-family: var(--font-family);
   cursor: pointer;
   transition: all var(--transition-base);
 }
-.btn-outline:hover { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
-.btn-outline:active { transform: scale(0.97); }
+.btn-outline:hover { background: var(--color-primary-bg); border-color: var(--color-primary); }
+.btn-outline:active { transform: translateY(1px); }
 
 /* Dark Mode — Buttons */
-.phone.dark-mode .btn-primary { box-shadow: 0 6px 20px rgba(244, 114, 182, 0.25); }
+.phone.dark-mode .btn-primary { box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.2); border-color: var(--color-primary-dark); }
 .phone.dark-mode .btn-outline {
-  background: #16213E; border-color: rgba(244, 114, 182, 0.2); color: #F9A8D4;
+  background: var(--bg-dark-card); border-color: rgba(232, 160, 174, 0.3); color: #E8A0AE;
 }
-.phone.dark-mode .btn-outline:hover { background: #F9A8D4; color: #fff; }
+.phone.dark-mode .btn-outline:hover { background: rgba(232, 160, 174, 0.1); }
 
 /* === Ghost Button (Title Bar) === */
 .btn-ghost {
@@ -124,45 +124,34 @@
   80% { transform: translateX(4px); }
 }
 
-/* === Glass Card === */
-/* emotion 变量驱动 Soft Glass：WebView 降级时回退到 emotion=1 的高不透明度 */
+/* === Glass Card — 手账纸片风 === */
 .card-glass {
-  background: var(--emotion-glass-bg, rgba(255, 255, 255, 0.72));
-  border-radius: var(--emotion-radius, var(--radius-lg, 16px));
-  border: var(--emotion-glass-border, 1.5px solid rgba(255, 255, 255, 0.6));
+  background: var(--emotion-glass-bg, #FFFFFF);
+  border-radius: var(--emotion-radius, var(--radius-lg, 10px));
+  border: var(--emotion-glass-border, 1.5px solid #F0E6DF);
   box-shadow: var(--emotion-shadow, var(--shadow-card));
-  padding: var(--space-lg, 16px);
+  padding: var(--space-xl, 24px);
   transition: all var(--transition-base);
+  background-image: var(--texture-washi);
 }
-/* 支持 backdrop-filter 的设备使用更通透的效果 */
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  .card-glass {
-    backdrop-filter: var(--emotion-glass-blur, blur(8px));
-    -webkit-backdrop-filter: var(--emotion-glass-blur, blur(8px));
-  }
-}
-.card-glass:hover { box-shadow: var(--shadow-card-hover); }
+.card-glass:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-1px); }
 
 /* Dark Mode — Glass Card */
 .phone.dark-mode .card-glass {
-  background: #16213E; border-color: rgba(255, 255, 255, 0.06);
+  background: var(--bg-dark-card); border-color: #4A3F38;
 }
 
-/* === Setting Item === */
+/* === Setting Item — 纸片风 === */
 .setting-item {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px var(--space-lg, 16px);
-  border-radius: var(--emotion-radius, var(--radius-lg, 16px));
-  background: var(--emotion-glass-bg, rgba(255, 255, 255, 0.88));
+  padding: 14px var(--space-lg, 18px);
+  border-radius: var(--emotion-radius, var(--radius-lg, 10px));
+  background: var(--emotion-glass-bg, #FFFFFF);
+  border: 1px solid var(--border-hand-color, #F0E6DF);
   cursor: pointer;
   transition: all var(--transition-base);
   margin-bottom: 8px;
-}
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  .setting-item {
-    backdrop-filter: var(--emotion-glass-blur, blur(8px));
-    -webkit-backdrop-filter: var(--emotion-glass-blur, blur(8px));
-  }
+  box-shadow: 1px 2px 0 rgba(74, 55, 40, 0.04);
 }
 .setting-item:last-child { margin-bottom: 0; }
 .setting-item:hover { background: rgba(255, 255, 255, 0.9); }
@@ -175,10 +164,10 @@
 .setting-item .item-icon svg { width: 20px; height: 20px; }
 
 /* Dark Mode — Setting Item */
-.phone.dark-mode .setting-item { background: #16213E; }
+.phone.dark-mode .setting-item { background: var(--bg-dark-card); border-color: #4A3F38; box-shadow: 1px 2px 0 rgba(0,0,0,0.08); }
 .phone.dark-mode .setting-item:hover { background: rgba(255, 255, 255, 0.04); }
-.phone.dark-mode .setting-item .item-label { color: #D0C8E0; }
-.phone.dark-mode .setting-item .item-value { color: #8078A0; }
+.phone.dark-mode .setting-item .item-label { color: #F5EDE8; }
+.phone.dark-mode .setting-item .item-value { color: #B8A89C; }
 
 /* === Group Title === */
 .group-title {
@@ -209,21 +198,25 @@
 .toggle-switch input:checked + .toggle-slider { background: var(--color-primary); }
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
 
-/* === Toast === */
+/* === Toast — 便签纸风 === */
 .toast {
-  position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
-  background: var(--text-primary, #3A2030); color: #fff;
-  padding: 10px 24px; border-radius: var(--radius-xl, 20px);
+  position: absolute; top: 60px; left: 50%; transform: translateX(-50%) rotate(-1deg);
+  background: #FFF9F0; color: var(--text-primary, #4A3728);
+  padding: 10px 20px; border-radius: var(--radius-md, 8px);
+  border: 1.5px solid #F0E6DF;
+  box-shadow: 2px 3px 0 rgba(74, 55, 40, 0.08);
   font-size: calc(13px * var(--font-scale, 1)); font-weight: 600; z-index: 200;
-  opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none;
 }
-.toast.show { opacity: 1; }
-.toast.success { background: var(--color-success, #4CAF50); }
-.toast.error { background: var(--color-error, #FF4757); }
-.toast.info { background: var(--color-primary); }
+.toast.show { opacity: 1; transform: translateX(-50%) rotate(0deg); }
+.toast.success { background: #F0FFF5; border-color: #C8E8D8; color: #3A7A5A; }
+.toast.error { background: #FFF5F5; border-color: #F0D0D0; color: #B85A5A; }
+.toast.info { background: #FFF9F0; border-color: #F0E6DF; }
 
 /* Dark Mode — Toast */
-.phone.dark-mode .toast { background: #E0D8E8; color: #1A1A2E; }
+.phone.dark-mode .toast { background: #3A312B; color: #F5EDE8; border-color: #4A3F38; box-shadow: 2px 3px 0 rgba(0,0,0,0.15); }
+.phone.dark-mode .toast.success { background: #2A3A30; border-color: #3A5A48; color: #A8DCC8; }
+.phone.dark-mode .toast.error { background: #3A2A2A; border-color: #5A3A3A; color: #E8A0A0; }
 
 /* === Modal Overlay + Bottom Sheet === */
 .modal-overlay {
@@ -290,32 +283,19 @@
 /* Dark Mode — Arrow Right */
 .phone.dark-mode .arrow-right { color: #706878; }
 
-/* ===== Bottom Navigation — v9 Macaron Capsule + Dual Trail + Spring ===== */
-/*
- * 胶囊指示器：马卡龙软粉渐变，包裹 icon+text
- * 拖尾 smear：双层模糊拖尾 (t1=45ms/5px, t2=90ms/10px)
- * 弹簧物理：--ease-spring 弹性曲线，入场 overshoot → 回弹 → 稳定
- * 暗色模式：半透明深色底 + 更柔和的胶囊发光
- * 无障碍：prefers-reduced-motion 禁用所有动画
- */
+/* ===== Bottom Navigation — 手账风纯色 + 虚线分割 ===== */
 .bottom-nav {
   display: flex; justify-content: space-around;
   padding: 6px 0 18px;
-  background: var(--emotion-glass-bg, rgba(255, 255, 255, 0.88));
-  border-top: 0.5px solid rgba(0, 0, 0, 0.05);
+  background: var(--bg-page, #FDF8F4);
+  border-top: 1.5px dashed var(--border-hand-color, #F0E6DF);
   position: relative; z-index: 10;
-}
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  .bottom-nav {
-    backdrop-filter: var(--emotion-glass-blur, blur(24px));
-    -webkit-backdrop-filter: var(--emotion-glass-blur, blur(24px));
-  }
 }
 
 .nav-item {
   text-align: center;
   font-size: var(--font-size-xs, 10px);
-  color: #B0A0B0;
+  color: var(--text-muted, #C4B0A4);
   cursor: pointer;
   display: flex; flex-direction: column; align-items: center;
   gap: 3px; padding: 4px 12px;
@@ -331,10 +311,9 @@
   transition: transform 0.35s var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 
-/* Active state — white text on capsule for contrast + subtle glow */
+/* Active state — 樱花粉强调 */
 .nav-item.active {
-  color: #FFFFFF;
-  text-shadow: 0 1px 3px rgba(244, 114, 182, 0.3);
+  color: var(--color-primary, #F2A7B3);
 }
 .nav-item.active svg {
   transform: scale(1.06);

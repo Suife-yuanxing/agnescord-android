@@ -1,3 +1,335 @@
+/* ===== 林念念 Bot — Design Tokens v5 ===== */
+/* 日系手账 × 樱花纸感 × 贴纸涂鸦设计系统 */
+
+/*
+ * 视觉范式：手账纸感（Paper Craft），像翻开一本贴满樱花贴纸和猫咪涂鸦的手账本
+ * 情感浓度：通过 data-emotion="1~5" 控制 5 档视觉表现强度
+ * 品牌核心：#F2A7B3 樱花粉 + 猫娘IP贴纸 + 薄荷绿 + 薄紫
+ * 质感关键词：纸张纹理、手绘描边、贴纸阴影、微倾斜、暖色调
+ */
+
+:root {
+  /* === Primary Palette — 樱花粉（低饱和暖粉） === */
+  --color-primary: #F2A7B3;
+  --color-primary-light: #FBDDE2;
+  --color-primary-dark: #E8899A;
+  --color-primary-bg: #FFF9F7;
+  --color-primary-ghost: rgba(242, 167, 179, 0.08);
+  --color-primary-border: rgba(242, 167, 179, 0.25);
+  --color-primary-shadow: rgba(242, 167, 179, 0.2);
+
+  /* === Secondary — 薄紫（薰衣草） === */
+  --color-secondary: #C9B8E8;
+  --color-secondary-light: #EDE7F8;
+  --color-secondary-dark: #A992D8;
+  --color-secondary-ghost: rgba(201, 184, 232, 0.1);
+  --color-secondary-border: rgba(201, 184, 232, 0.25);
+
+  /* === Accent — 薄荷绿 + 蜜橘 === */
+  --color-accent: #A8DCC8;
+  --color-accent-light: #D4F0E5;
+  --color-accent-dark: #7BC89C;
+  --color-accent-warm: #F5C882;
+  --color-accent-warm-light: #FDEBD0;
+
+  /* === Semantic === */
+  --color-success: #7BC89C;
+  --color-success-light: #D4F0E5;
+  --color-error: #E88B8B;
+  --color-error-ghost: rgba(232, 139, 139, 0.08);
+  --color-warning: #F5C882;
+  --color-info: #8BB8E8;
+
+  /* === Text (Light Mode) — 暖棕色调 === */
+  --text-primary: #4A3728;
+  --text-secondary: #9C8578;
+  --text-muted: #C4B0A4;
+  --text-label: #7A6455;
+
+  /* === Text (Dark Mode) — 暖白 === */
+  --text-dark-primary: #F5EDE8;
+  --text-dark-secondary: #B8A89C;
+  --text-dark-muted: #7A6E64;
+
+  /* === Background — 暖白纸质 === */
+  --bg-page: #FDF8F4;
+  --bg-body: #FAF3EE;
+  --bg-dark: #2C2420;
+  --bg-dark-card: #3A312B;
+  --bg-dark-card-alt: #4A3F38;
+
+  /* === Body Gradient — 暖纸色微渐变 === */
+  --body-gradient: linear-gradient(170deg, #FDF8F4 0%, #FAF3EE 40%, #FDF6F0 70%, #FBF4EF 100%);
+
+  /* === Card / 纸片感（默认值 = emotion 3 中档）=== */
+  --card-bg: #FFFFFF;
+  --card-blur: none;
+  --card-border: 1.5px solid #F0E6DF;
+  --card-shadow: 2px 3px 0 rgba(74, 55, 40, 0.06);
+
+  /* === Gradients — 极轻柔，仅用于特殊场景 === */
+  --gradient-primary: linear-gradient(135deg, #F2A7B3, #FBDDE2);
+  --gradient-primary-dark: linear-gradient(135deg, #E8899A, #F2A7B3);
+  --gradient-header: #FDF8F4;
+  --gradient-secondary: linear-gradient(135deg, #C9B8E8, #EDE7F8);
+  --gradient-secondary-dark: linear-gradient(135deg, #A992D8, #C9B8E8);
+  --gradient-accent: linear-gradient(135deg, #A8DCC8, #D4F0E5);
+  --gradient-success: linear-gradient(135deg, #7BC89C, #D4F0E5);
+
+  /* === Border Radius — 手账风（偏小圆角，部分微不对称） === */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-2xl: 20px;
+  --radius-full: 50%;
+
+  /* === Shadows — 纸片叠放感（偏移实色，非弥散） === */
+  --shadow-phone: 4px 6px 0 rgba(74, 55, 40, 0.08), 0 0 0 2px rgba(240, 230, 223, 0.6);
+  --shadow-btn: 2px 3px 0 rgba(74, 55, 40, 0.1);
+  --shadow-btn-hover: 3px 4px 0 rgba(74, 55, 40, 0.14);
+  --shadow-card: 2px 3px 0 rgba(74, 55, 40, 0.06);
+  --shadow-card-hover: 3px 5px 0 rgba(74, 55, 40, 0.1);
+  --shadow-float: 3px 4px 0 rgba(74, 55, 40, 0.1);
+
+  /* === Spacing — 更宽松（低密度手账感） === */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 14px;
+  --space-lg: 18px;
+  --space-xl: 24px;
+  --space-2xl: 48px;
+
+  /* === Typography — 圆润字体栈 === */
+  --font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-display: 'ZCOOL KuaiLe', 'PingFang SC', cursive;
+  --font-handwrite: 'Ma Shan Zheng', 'PingFang SC', cursive;
+  --font-scale: 1;
+  --font-size-xs: calc(10px * var(--font-scale));
+  --font-size-sm: calc(12px * var(--font-scale));
+  --font-size-base: calc(15px * var(--font-scale));
+  --font-size-lg: calc(17px * var(--font-scale));
+  --font-size-xl: calc(18px * var(--font-scale));
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --line-height-base: 1.8;
+
+  /* === Phone Frame === */
+  --phone-width: 360px;
+  --phone-height: 800px;
+
+  /* === Transitions — 柔和曲线 === */
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-push: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-paper: cubic-bezier(0.22, 0.68, 0.36, 1);
+  --transition-fast: 0.15s var(--ease-paper);
+  --transition-base: 0.25s var(--ease-paper);
+  --transition-slow: 0.4s var(--ease-paper);
+
+  /* === Input — 手绘边框感 === */
+  --input-padding: 14px 16px;
+  --input-radius: var(--radius-lg);
+  --input-border: 1.5px solid #F0E6DF;
+  --input-focus-ring: 0 0 0 3px rgba(242, 167, 179, 0.12);
+
+  /* === Texture — 纸张纹理（CSS 生成） === */
+  --texture-grid: linear-gradient(rgba(242, 167, 179, 0.04) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(242, 167, 179, 0.04) 1px, transparent 1px);
+  --texture-grid-size: 22px 22px;
+  --texture-washi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+
+  /* === Hand-drawn Border — 手绘描边 === */
+  --border-hand: 2px solid #F0E6DF;
+  --border-hand-color: #F0E6DF;
+}
+
+/* === Dark Mode Token Overrides — 夜晚咖啡店（暖棕） === */
+.phone.dark-mode {
+  background: #2C2420;
+  --bg-page: var(--bg-dark);
+  --color-primary: #E8A0AE;
+  --color-primary-light: #F2C4CD;
+  --color-primary-dark: #D88A98;
+  --color-primary-bg: rgba(232, 160, 174, 0.08);
+  --color-primary-ghost: rgba(232, 160, 174, 0.1);
+  --color-primary-border: rgba(232, 160, 174, 0.2);
+  --color-primary-shadow: rgba(232, 160, 174, 0.15);
+  --color-secondary: #BBA8D8;
+  --color-accent: #8CC8B0;
+  --card-bg: var(--bg-dark-card);
+  --card-blur: none;
+  --card-border: 1.5px solid #4A3F38;
+  --card-shadow: 2px 3px 0 rgba(0, 0, 0, 0.15);
+  --text-primary: var(--text-dark-primary);
+  --text-secondary: var(--text-dark-secondary);
+  --text-muted: var(--text-dark-muted);
+  --input-border: 1.5px solid #4A3F38;
+  --shadow-phone: 4px 6px 0 rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(74, 63, 56, 0.4);
+  --shadow-card: 2px 3px 0 rgba(0, 0, 0, 0.12);
+  --shadow-card-hover: 3px 5px 0 rgba(0, 0, 0, 0.18);
+  --shadow-float: 3px 4px 0 rgba(0, 0, 0, 0.2);
+  --border-hand-color: #4A3F38;
+  --texture-grid: linear-gradient(rgba(232, 160, 174, 0.03) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(232, 160, 174, 0.03) 1px, transparent 1px);
+  --body-gradient: linear-gradient(170deg, #2C2420 0%, #322A24 40%, #2E2622 70%, #302824 100%);
+  --emotion-decor-opacity: 0.5;
+}
+.phone.dark-mode .title-bar { background: #3A312B; }
+
+/* ============================================================
+ *  情感浓度梯度 — data-emotion="1~5"
+ *  手账风：控制纹理密度/微倾斜角度/装饰元素/阴影强度
+ * ============================================================ */
+
+/* ── Emotion 5/5: 启动页 / 聊天页 — 最丰富手账装饰 ── */
+.phone[data-emotion="5"] {
+  --emotion-glass-bg: #FFFFFF;
+  --emotion-glass-blur: none;
+  --emotion-glass-border: 2px solid #F0E6DF;
+  --emotion-radius: 12px;
+  --emotion-shadow: 3px 4px 0 rgba(74, 55, 40, 0.08);
+  --emotion-decor-opacity: 1;
+  --emotion-orb-count: 3;
+  --emotion-card-blur: none;
+  --emotion-tilt: 0.6deg;
+}
+
+/* ── Emotion 4/5: 首页仪表盘 / 我的 — 中丰富 ── */
+.phone[data-emotion="4"] {
+  --emotion-glass-bg: #FFFFFF;
+  --emotion-glass-blur: none;
+  --emotion-glass-border: 1.5px solid #F0E6DF;
+  --emotion-radius: 11px;
+  --emotion-shadow: 2px 3px 0 rgba(74, 55, 40, 0.07);
+  --emotion-decor-opacity: 0.7;
+  --emotion-orb-count: 2;
+  --emotion-card-blur: none;
+  --emotion-tilt: 0.4deg;
+}
+
+/* ── Emotion 3/5: Bot管理 / 创建向导 / 通知 — 适度 ── */
+.phone[data-emotion="3"] {
+  --emotion-glass-bg: #FFFFFF;
+  --emotion-glass-blur: none;
+  --emotion-glass-border: 1.5px solid #F0E6DF;
+  --emotion-radius: 10px;
+  --emotion-shadow: 2px 3px 0 rgba(74, 55, 40, 0.06);
+  --emotion-decor-opacity: 0.4;
+  --emotion-orb-count: 1;
+  --emotion-card-blur: none;
+  --emotion-tilt: 0.3deg;
+}
+
+/* ── Emotion 2/5: 设置 / 编辑个人资料 — 极简 ── */
+.phone[data-emotion="2"] {
+  --emotion-glass-bg: #FFFFFF;
+  --emotion-glass-blur: none;
+  --emotion-glass-border: 1.5px solid #F0E6DF;
+  --emotion-radius: 10px;
+  --emotion-shadow: 2px 2px 0 rgba(74, 55, 40, 0.05);
+  --emotion-decor-opacity: 0;
+  --emotion-orb-count: 0;
+  --emotion-card-blur: none;
+  --emotion-tilt: 0deg;
+}
+
+/* ── Emotion 1/5: 数据面板 / 管理员 / API Key — 纯功能 ── */
+.phone[data-emotion="1"] {
+  --emotion-glass-bg: #FFFFFF;
+  --emotion-glass-blur: none;
+  --emotion-glass-border: 1px solid #F0E6DF;
+  --emotion-radius: 8px;
+  --emotion-shadow: 1px 2px 0 rgba(74, 55, 40, 0.04);
+  --emotion-decor-opacity: 0;
+  --emotion-orb-count: 0;
+  --emotion-card-blur: none;
+  --emotion-tilt: 0deg;
+}
+
+/* ── 暗黑模式 emotion 梯度覆盖 ── */
+.phone.dark-mode[data-emotion="5"] {
+  --emotion-glass-bg: #3A312B;
+  --emotion-glass-border: 2px solid #4A3F38;
+  --emotion-shadow: 3px 4px 0 rgba(0, 0, 0, 0.15);
+}
+.phone.dark-mode[data-emotion="4"] {
+  --emotion-glass-bg: #3A312B;
+  --emotion-glass-border: 1.5px solid #4A3F38;
+  --emotion-shadow: 2px 3px 0 rgba(0, 0, 0, 0.12);
+}
+.phone.dark-mode[data-emotion="3"] {
+  --emotion-glass-bg: #3A312B;
+  --emotion-glass-border: 1.5px solid #4A3F38;
+  --emotion-shadow: 2px 3px 0 rgba(0, 0, 0, 0.1);
+}
+.phone.dark-mode[data-emotion="2"] {
+  --emotion-glass-bg: #3A312B;
+  --emotion-glass-border: 1.5px solid #4A3F38;
+  --emotion-shadow: 2px 2px 0 rgba(0, 0, 0, 0.08);
+}
+.phone.dark-mode[data-emotion="1"] {
+  --emotion-glass-bg: #3A312B;
+  --emotion-glass-border: 1px solid #4A3F38;
+  --emotion-shadow: 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* === Global Font Size Scale === */
+.phone[data-font-size="小"]  { --font-scale: 0.85; }
+.phone[data-font-size="中"]  { --font-scale: 1; }
+.phone[data-font-size="大"]  { --font-scale: 1.18; }
+
+/* === Font Size Zoom === */
+.phone[data-font-size="小"] .scroll-area { zoom: 0.88; }
+.phone[data-font-size="大"] .scroll-area { zoom: 1.12; }
+
+/* ============================================================
+ *  心情情境化适配 (Mood-Contextual Theming)
+ *  手账风：通过 header 色块和阴影微调表达心情
+ * ============================================================ */
+
+/* ── Light Mode Mood Overrides ── */
+.phone[data-mood="happy"]:not(.dark-mode) {
+  --gradient-header: #FFF5F0;
+  --shadow-card: 2px 3px 0 rgba(242, 167, 179, 0.1);
+}
+.phone[data-mood="excited"]:not(.dark-mode) {
+  --gradient-header: #FFF8F0;
+  --shadow-card: 2px 3px 0 rgba(245, 200, 130, 0.12);
+}
+.phone[data-mood="sleepy"]:not(.dark-mode) {
+  --gradient-header: #F8F5FD;
+  --card-bg: #FDFCFF;
+}
+.phone[data-mood="missing"]:not(.dark-mode) {
+  --gradient-header: #F5F8FD;
+}
+.phone[data-mood="celebrate"]:not(.dark-mode) {
+  --gradient-header: #FFF8F5;
+  --shadow-card: 3px 4px 0 rgba(242, 167, 179, 0.12);
+}
+
+/* ── Dark Mode Mood Overrides ── */
+.phone.dark-mode[data-mood="happy"] {
+  --gradient-header: #3E3230;
+  --card-bg: rgba(58, 49, 43, 0.9);
+}
+.phone.dark-mode[data-mood="excited"] {
+  --gradient-header: #3E3428;
+  --bg-page: #302820;
+}
+.phone.dark-mode[data-mood="sleepy"] {
+  --gradient-header: #2E2A38;
+  --bg-page: #282420;
+  --card-bg: rgba(50, 42, 38, 0.9);
+}
+.phone.dark-mode[data-mood="missing"] {
+  --gradient-header: #2C3038;
+}
+.phone.dark-mode[data-mood="celebrate"] {
+  --gradient-header: #3E3028;
+  --shadow-card: 3px 4px 0 rgba(0, 0, 0, 0.18);
+}
 /* ===== 林念念 Bot — Design Tokens v4 ===== */
 /* Soft Glass × 情感浓度梯度 × 品牌化设计系统 */
 

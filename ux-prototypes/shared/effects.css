@@ -1,20 +1,20 @@
-/* ===== 林念念 Bot — Visual Effects ===== */
-/* Ripple + Petals + Orbs */
+/* ===== 林念念 Bot — Visual Effects v5 ===== */
+/* 日系手账风: Ripple + Petals + Sticker Animations + Paper Effects */
 
-/* === Click Ripple Effect === */
+/* === Click Ripple Effect — 铅笔圈风 === */
 .ripple {
   position: fixed; border-radius: 50%;
-  background: radial-gradient(circle, rgba(244, 114, 182, 0.25) 0%, rgba(244, 114, 182, 0.05) 60%, transparent 70%);
+  background: radial-gradient(circle, rgba(242, 167, 179, 0.2) 0%, rgba(242, 167, 179, 0.05) 50%, transparent 65%);
   transform: translate(-50%, -50%) scale(0);
-  animation: ripple-expand 0.7s ease-out forwards;
+  animation: ripple-expand 0.6s var(--ease-paper, cubic-bezier(0.22, 0.68, 0.36, 1)) forwards;
   pointer-events: none; z-index: 9999;
 }
 
-/* === Floating Petals (brand page) === */
+/* === Floating Petals — 樱花花瓣（更柔和） === */
 .petal {
   position: fixed; pointer-events: none; z-index: 0;
-  width: 12px; height: 16px;
-  background: radial-gradient(ellipse at 30% 30%, rgba(244, 182, 210, 0.5), rgba(244, 114, 182, 0.2));
+  width: 10px; height: 14px;
+  background: radial-gradient(ellipse at 30% 30%, rgba(251, 221, 226, 0.6), rgba(242, 167, 179, 0.2));
   border-radius: 50% 0 50% 0;
   animation: fall linear infinite;
 }
@@ -53,28 +53,24 @@
   50% { opacity: 0.4; }
 }
 
-/* === Festival Banner (Phase 2) === */
+/* === Festival Banner — 手账贴纸风 === */
 .festival-banner {
   margin: 8px 20px; padding: 12px 16px;
-  background: linear-gradient(135deg, rgba(255,224,232,0.9), rgba(255,212,220,0.9));
-  border-radius: 14px; display: flex; align-items: center; gap: 10px;
-  border: 1.5px solid rgba(244,114,182,0.2);
-  animation: festival-glow 2s ease-in-out infinite;
+  background: #FFF9F5;
+  border-radius: var(--radius-lg, 10px); display: flex; align-items: center; gap: 10px;
+  border: 1.5px solid #F0E6DF;
+  box-shadow: 2px 3px 0 rgba(74, 55, 40, 0.06);
+  transform: rotate(-0.5deg);
 }
 .phone.dark-mode .festival-banner {
-  background: linear-gradient(135deg, rgba(42,26,46,0.9), rgba(30,26,46,0.9));
-  border-color: rgba(244,114,182,0.15);
+  background: #3A312B;
+  border-color: #4A3F38;
 }
 .festival-emoji { font-size: 24px; }
-.festival-text { font-size: 13px; font-weight: 700; color: #3A2030; }
-.phone.dark-mode .festival-text { color: #E0D8E8; }
-@keyframes festival-glow {
-  0%, 100% { box-shadow: 0 2px 12px rgba(244,114,182,0.1); }
-  50% { box-shadow: 0 4px 20px rgba(244,114,182,0.25); }
-}
+.festival-text { font-size: 13px; font-weight: 700; color: var(--text-primary, #4A3728); }
+.phone.dark-mode .festival-text { color: #F5EDE8; }
 
-/* === Performance-Aware CSS Rules (Phase 2) === */
-/* Disable animations based on data-perf attributes */
+/* === Performance-Aware CSS Rules === */
 .phone[data-perf-ripple="0"] .ripple { display: none !important; }
 .phone[data-perf-petals="0"] .petal { display: none !important; }
 .phone[data-perf-nav="0"] .nav-capsule,
@@ -84,6 +80,57 @@
 .phone[data-perf-mood="0"] .img-cat img { transition: none !important; }
 .phone[data-perf-festival="0"] .festival-banner { animation: none !important; }
 .phone[data-perf-typing="0"] .typing-dots span { animation: none !important; opacity: 0.5; }
+
+/* ============================================================
+ *  手账风动画系统 — Sticker/Paper/Note Animations
+ * ============================================================ */
+
+/* 贴纸贴入：从略大到正常 + 微弹跳 + 微旋转 */
+@keyframes sticker-in {
+  0%   { opacity: 0; transform: scale(1.15) rotate(2deg); }
+  60%  { opacity: 1; transform: scale(0.97) rotate(-0.5deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+/* 翻页效果：轻微旋转 + 阴影变化 */
+@keyframes page-flip {
+  0%   { opacity: 0; transform: perspective(800px) rotateY(-8deg) translateX(20px); }
+  100% { opacity: 1; transform: perspective(800px) rotateY(0deg) translateX(0); }
+}
+
+/* 纸张按压：微凹陷 + 阴影消失 */
+@keyframes paper-press {
+  0%   { transform: translateY(0); box-shadow: 2px 3px 0 rgba(74, 55, 40, 0.08); }
+  50%  { transform: translateY(2px); box-shadow: 0px 1px 0 rgba(74, 55, 40, 0.04); }
+  100% { transform: translateY(0); box-shadow: 2px 3px 0 rgba(74, 55, 40, 0.08); }
+}
+
+/* 便签滑入：从顶部滑入 + 微晃 */
+@keyframes note-slide {
+  0%   { opacity: 0; transform: translateY(-16px) rotate(-2deg); }
+  60%  { opacity: 1; transform: translateY(2px) rotate(0.5deg); }
+  100% { opacity: 1; transform: translateY(0) rotate(0deg); }
+}
+
+/* 铅笔划过：从左到右的描边动画 */
+@keyframes pencil-draw {
+  0%   { width: 0; opacity: 0.6; }
+  100% { width: 100%; opacity: 1; }
+}
+
+/* 猫咪打盹（加载状态用） */
+@keyframes cat-nap {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25%  { transform: translateY(-2px) rotate(-2deg); }
+  75%  { transform: translateY(1px) rotate(1deg); }
+}
+
+/* 手账风卡片入场（替代旧的 card-in） */
+@keyframes card-sticker-in {
+  0%   { opacity: 0; transform: scale(1.08) rotate(var(--emotion-tilt, 0.3deg)); }
+  70%  { opacity: 1; transform: scale(0.99) rotate(calc(var(--emotion-tilt, 0.3deg) * -0.5)); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
 
 /* Respect OS-level reduced motion */
 @media (prefers-reduced-motion: reduce) {
