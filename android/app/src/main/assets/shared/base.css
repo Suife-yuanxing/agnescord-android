@@ -1,5 +1,5 @@
-/* ===== 林念念 Bot — Base Styles ===== */
-/* Reset + Body + Phone Frame + Title Bar + Scroll Area + Animations */
+/* ===== 林念念 Bot — Base Styles v5 ===== */
+/* 日系手账风: Reset + Body + Phone Frame + Title Bar + Scroll Area */
 
 /* === Reset === */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -23,43 +23,47 @@ body {
   display: flex; justify-content: center; align-items: center; min-height: 100vh;
   background: var(--body-gradient);
   font-family: var(--font-family);
+  line-height: var(--line-height-base, 1.8);
 }
 
-/* === Phone Frame === */
+/* === Phone Frame — 手账本网格纹理背景 === */
 .phone {
   width: var(--phone-width, 360px);
   height: var(--phone-height, 800px);
-  border-radius: var(--radius-2xl, 32px);
+  border-radius: var(--radius-2xl, 20px);
   overflow: hidden;
   position: relative;
   display: flex; flex-direction: column;
-  background: var(--bg-page, #F5F5F5);
+  background: var(--bg-page, #FDF8F4);
+  background-image: var(--texture-grid);
+  background-size: var(--texture-grid-size);
   box-shadow: var(--shadow-phone);
-  animation: page-push-enter 0.35s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  animation: page-push-enter 0.35s var(--ease-paper, cubic-bezier(0.22, 0.68, 0.36, 1)) both;
   transition: background var(--transition-slow);
 }
 
-/* === Title Bar === */
-/* 统一引用 --gradient-header，消除各页面硬编码不同渐变导致的顶部色块不同步 */
+/* === Title Bar — 纯色暖白 + 撕裂纸边底部 === */
 .title-bar {
-  background: var(--gradient-header, linear-gradient(135deg, #F472B6, #F9A8D4));
-  padding: 44px 14px 10px;
+  background: var(--gradient-header, #FDF8F4);
+  padding: 44px 14px 12px;
   display: flex; align-items: center; gap: 10px;
-  color: #fff;
+  color: var(--text-primary, #4A3728);
   position: relative; z-index: 10;
+  border-bottom: 1.5px dashed var(--border-hand-color, #F0E6DF);
 }
 .title-bar .back {
-  cursor: pointer; text-decoration: none; color: #fff;
+  cursor: pointer; text-decoration: none; color: var(--text-primary, #4A3728);
   display: flex; align-items: center;
 }
 .title-bar .back svg { width: 20px; height: 20px; }
 .title-bar .title {
-  flex: 1; font-size: var(--font-size-xl, 17px); font-weight: var(--font-weight-bold, 700);
+  flex: 1; font-size: var(--font-size-xl, 18px); font-weight: var(--font-weight-bold, 700);
+  font-family: var(--font-display, var(--font-family));
 }
 
-/* === Scroll Area === */
+/* === Scroll Area — 更宽松的内边距 === */
 .scroll-area {
-  flex: 1; overflow-y: auto; padding: 8px 0 20px;
+  flex: 1; overflow-y: auto; padding: 12px 0 24px;
   overscroll-behavior: contain;
 }
 
